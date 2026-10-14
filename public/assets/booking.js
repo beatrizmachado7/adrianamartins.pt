@@ -368,8 +368,20 @@
     if (document.activeElement === document.body || !el.contains(document.activeElement)) h?.focus({ preventScroll: true });
   }
 
+  // sem servidor ligado: as marcações online ficam fechadas e a cliente marca por mensagem ou telefone
+  function offlineBooking(c) {
+    const wa = c.whatsapp ? S.waLink(c.whatsapp) + '?text=' + encodeURIComponent('Olá Adriana! Gostava de fazer uma marcação.') : '';
+    $('#stepper').innerHTML = ''; $('#summary').hidden = true;
+    $('#step').innerHTML = `<div class="offline-box"><h2>Marcações online em breve</h2>
+      <p>As marcações pelo site vão abrir dentro de pouco tempo. Até lá, marca comigo por WhatsApp ou por telefone — respondo o mais depressa possível.</p>
+      <div class="actions-row">${wa ? `<a class="btn" href="${wa}" target="_blank" rel="noopener">${icon('phone')} Marcar por WhatsApp</a>` : ''}
+        ${c.phone ? `<a class="btn secondary" href="${S.telLink(c.phone)}">Ligar ${esc(c.phone)}</a>` : ''}</div>
+      <p class="small muted">Vê os serviços e preços em <a href="/servicos.html">Serviços</a>.</p></div>`;
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     [cfg, catalog] = await Promise.all([S.config(), api('/services')]);
+    if (S.isOffline()) return offlineBooking(cfg);
     // só os serviços que se marcam online (os extras são acrescentados no atendimento)
     catalog = [...catalog.categories, ...(catalog.uncategorized.length ? [{ name: 'Outros', services: catalog.uncategorized }] : [])]
       .map(c => ({ ...c, services: c.services.filter(s => s.bookable !== 0) })).filter(c => c.services.length);

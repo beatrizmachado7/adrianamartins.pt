@@ -877,3 +877,7 @@ body[data-page="servicos"] .page-head { background: transparent; }
 .rating-line .stars { color: var(--gold); display: inline-flex; gap: 2px; }
 .rating-line .stars svg { width: 17px; height: 17px; }
 .rating-line b { font-weight: 600; color: var(--brown-900); }
+/* v26 — site sem servidor ligado: marcações por WhatsApp/telefone */
+.offline-box { background: var(--cream); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 22px; max-width: 620px; }
+.offline-box h2 { margin: 0 0 8px; }
+.offline-box .actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 12px; }

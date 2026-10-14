@@ -84,6 +84,9 @@
       res = await fetch('/api/admin' + path, { method: opts.method || 'GET', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch' }, body: opts.body ? JSON.stringify(opts.body) : undefined });
     } catch { throw new Error('Sem ligação ao servidor. Verifica a internet e tenta novamente.'); }
+    if (!/json/.test(res.headers.get('content-type') || '') && !window.DEMO_IMG) {
+      throw new Error('O painel ainda não está ligado ao servidor. Fica disponível depois de o servidor (Render) ser publicado.');
+    }
     const data = await res.json().catch(() => ({}));
     if (res.status === 401 && !path.startsWith('/login')) { showLogin(); throw new Error(''); }
     if (!res.ok) { const e = new Error(data.error || 'Ocorreu um erro.'); e.data = data; e.status = res.status; throw e; }
@@ -1655,7 +1658,7 @@
   setInterval(() => { if (!$('#shell').hidden && document.visibilityState === 'visible') updateBadges(); }, 60000);
   addEventListener('hashchange', () => { if (dlg.open) dlg.close(); route(); });
   async function start() {
-    try { await api('/me'); } catch { return; }
+    try { await api('/me'); } catch (err) { if (err.message) { showLogin(); formMsg($('#l-msg'), esc(err.message)); } return; }
     try { const { settings } = await api('/settings'); TZ = settings.timezone || TZ; cache.settings = settings; await load(); paintSide(); } catch { /* continua */ }
     $('#login').hidden = true; $('#shell').hidden = false;
     route();

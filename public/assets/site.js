@@ -38,12 +38,33 @@
   };
   const DAYS = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
+  // modo sem servidor: se o servidor (Render) ainda não estiver ligado, os textos, contactos e serviços
+  // vêm de /assets/offline.json e as marcações online ficam fechadas (a cliente marca por WhatsApp/telefone)
+  let offline = false, offlineData = null;
+  const OFFLINE_GET = { '/config': d => d.config, '/services': d => d.services, '/reviews': d => d.reviews };
+  async function offlineGet(path) {
+    const key = path.split('?')[0], pick = OFFLINE_GET[key];
+    if (!pick) return null;
+    offlineData ||= await fetch('/assets/offline.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null);
+    if (!offlineData) return null;
+    offline = true; document.documentElement.classList.add('site-offline');
+    return pick(offlineData);
+  }
   async function api(path, opts = {}) {
-    const res = await fetch('/api/public' + path, { headers: { 'Content-Type': 'application/json' }, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+    const get = !opts.method || opts.method === 'GET';
+    let res;
+    try { res = await fetch('/api/public' + path, { headers: { 'Content-Type': 'application/json' }, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined }); }
+    catch (err) { const d = get && await offlineGet(path); if (d) return d; throw Object.assign(new Error('Sem ligação. Tenta outra vez dentro de momentos.'), { status: 0, offline }); }
+    const isJson = /json/.test(res.headers.get('content-type') || '');
+    if ((res.status >= 502 || !isJson) && !window.DEMO_IMG) {
+      const d = get && await offlineGet(path); if (d) return d;
+      throw Object.assign(new Error('As marcações online ainda não estão disponíveis. Fala comigo por WhatsApp ou telefone.'), { status: res.status, offline: true });
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { const e = new Error(data.error || 'Não foi possível concluir o pedido.'); e.status = res.status; e.data = data; throw e; }
     return data;
   }
+  const isOffline = () => offline;
 
   // fotografias otimizadas: carregamento diferido (exceto a principal) e descodificação assíncrona
   function photo(url, label, alt = '', { eager = false } = {}) {
@@ -197,6 +218,6 @@
     const done = () => { const t = b.textContent; b.textContent = 'Copiado'; setTimeout(() => { b.textContent = t; }, 1600); };
     try { navigator.clipboard.writeText(b.dataset.copy).then(done, () => {}); } catch { /* sem área de transferência */ }
   });
-  window.Site = { me, igHandle, igUrl, api, config, icon, esc, $, $$, fmt, photo, stars, hoursTable, hoursSummary, closuresHtml, waLink, telLink, DAYS, reveal, TZ, PAY_OPTS, payInfo, depositOf, eur };
+  window.Site = { me, igHandle, igUrl, api, config, icon, esc, $, $$, fmt, photo, stars, hoursTable, hoursSummary, closuresHtml, waLink, telLink, DAYS, reveal, TZ, isOffline, PAY_OPTS, payInfo, depositOf, eur };
   document.addEventListener('DOMContentLoaded', init);
 })();

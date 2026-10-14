@@ -172,3 +172,9 @@ O Netlify só serve páginas fixas; as marcações, o painel e a base de dados p
 2. **netlify.toml:** se o endereço do Render for diferente, troca `adriana-martins-estetica.onrender.com` pelo teu (5 sítios) e faz commit.
 3. **Netlify:** Add new site → Import from GitHub → este repositório. Não é preciso mudar nada: o `netlify.toml` já diz para publicar a pasta `public` sem build.
 4. O site abre pelo Netlify; tudo o que é `/api/...` é encaminhado para o Render. O painel fica em `/painel`.
+
+### Só Netlify (sem servidor, por agora)
+
+Enquanto o Render não estiver ligado, o site abre na mesma: textos, contactos, serviços e preços vêm de `public/assets/offline.json`. A página Marcações mostra "Marcações online em breve" com botões para WhatsApp e telefone, e o painel avisa que ainda não está ligado. Quando o Render estiver publicado, tudo passa a funcionar sozinho (sem mudar nada no Netlify).
+
+Se mudares serviços, preços ou textos no código antes de ligar o Render, atualiza o ficheiro com `npm run snapshot` e faz commit.
