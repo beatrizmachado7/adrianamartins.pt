@@ -29,3 +29,6 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false   # ex.: "Adriana Martins Estética <geral@o-teu-dominio.pt>"
+      # proxies à frente do servidor: 2 = Netlify → Render (para o limite de tentativas de login ver o IP real da cliente)
+      - key: TRUST_PROXY
+        value: "2"

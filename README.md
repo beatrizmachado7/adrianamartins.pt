@@ -162,3 +162,13 @@ Recolhe apenas nome, telefone e email (opcional no dashboard); sem dados clínic
 ## Demonstração
 
 `node demo/build.js` gera `demo/dist/demo.html`: o mesmo site e dashboard num único ficheiro, com a API simulada no browser. As clientes de exemplo estão identificadas como "Demo" (ex.: "Ana Demo"); nada é enviado nem chega a um servidor. Entrar no dashboard: `demo@exemplo.pt` / `demonstracao`.
+
+
+## Publicar com Netlify (páginas) + Render (servidor)
+
+O Netlify só serve páginas fixas; as marcações, o painel e a base de dados precisam do servidor no Render.
+
+1. **Render primeiro:** New → Blueprint → este repositório. Preenche `ADMIN_PASSWORD` e `PUBLIC_BASE_URL` (o endereço do Netlify ou o domínio). Copia o endereço do serviço (ex.: `https://adriana-martins-estetica.onrender.com`).
+2. **netlify.toml:** se o endereço do Render for diferente, troca `adriana-martins-estetica.onrender.com` pelo teu (5 sítios) e faz commit.
+3. **Netlify:** Add new site → Import from GitHub → este repositório. Não é preciso mudar nada: o `netlify.toml` já diz para publicar a pasta `public` sem build.
+4. O site abre pelo Netlify; tudo o que é `/api/...` é encaminhado para o Render. O painel fica em `/painel`.

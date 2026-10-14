@@ -12,7 +12,8 @@ const { AppError } = C;
 const app = express();
 app.disable('x-powered-by');
 // só confia no proxy imediatamente à frente (Render/Nginx): impede contornar os limites com X-Forwarded-For falso
-app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
+// TRUST_PROXY: true = 1 proxy (Render); um número = proxies à frente (ex.: 2 com o Netlify a encaminhar para o Render)
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : /^\d+$/.test(process.env.TRUST_PROXY || '') ? Number(process.env.TRUST_PROXY) : false);
 // compressão gzip/brotli para HTML, CSS, JS e JSON (menos dados no telemóvel)
 app.use(require('compression')({ threshold: 1024 }));
 const smallJson = express.json({ limit: '100kb' });

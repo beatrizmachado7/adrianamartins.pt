@@ -1,0 +1,61 @@
+# Netlify: serve as páginas do site (pasta public) e encaminha tudo o que precisa do servidor para o Render.
+# ANTES DE PUBLICAR: troca "adriana-martins-estetica.onrender.com" pelo endereço do serviço no Render
+# (no Render, a variável TRUST_PROXY deve ficar com o valor 2).
+[build]
+  publish = "public"
+  command = ""
+
+# servidor (marcações, painel, horários, emails) — corre no Render
+[[redirects]]
+  from = "/api/*"
+  to = "https://adriana-martins-estetica.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/uploads/*"
+  to = "https://adriana-martins-estetica.onrender.com/uploads/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "https://adriana-martins-estetica.onrender.com/sitemap.xml"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/robots.txt"
+  to = "https://adriana-martins-estetica.onrender.com/robots.txt"
+  status = 200
+  force = true
+
+# endereço curto do painel
+[[redirects]]
+  from = "/painel"
+  to = "/admin/"
+  status = 302
+
+# a antiga página de avaliações passou para o feedback da página inicial
+[[redirects]]
+  from = "/avaliacoes.html"
+  to = "/#fb-sec"
+  status = 301
+
+# páginas e scripts sempre atualizados depois de cada publicação
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/assets/*.css"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Cache-Control = "no-cache"
