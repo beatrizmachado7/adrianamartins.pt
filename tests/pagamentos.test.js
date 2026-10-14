@@ -111,3 +111,38 @@ test('guardar textos no painel mantém os parágrafos', async () => {
   assert.equal((await adm('PUT', '/settings', { birthday_message: 'Olá {nome}!\r\n\r\nBeijinho,\n{profissional}' })).status, 200);
   assert.equal(getSettings().birthday_message, 'Olá {nome}!\n\nBeijinho,\n{profissional}');
 });
+
+test('WhatsApp com um toque: mensagens preenchidas na marcação e email de teste sem configuração', async () => {
+  const d = day(15);
+  await adm('PUT', `/day-slots/${d}`, { times: ['10:00'] });
+  const r = await book(at(d, '10:00'), { payment_method: 'mbway' });
+  const id = db.prepare('SELECT id FROM bookings WHERE ref=?').get(r.body.ref).id;
+  const b = (await adm('GET', `/bookings/${id}`)).body;
+  assert.match(b.wa.pending, /^Olá Cliente!/); assert.match(b.wa.pending, /MB WAY para o 939 907 962/); assert.ok(b.wa.pending.includes(r.body.ref));
+  assert.match(b.wa.pending, /gerir\.html\?t=/); assert.ok(!/\{\w+\}/.test(b.wa.confirmed + b.wa.reminder), 'sem variáveis por preencher');
+  assert.equal((await adm('POST', `/bookings/${id}/wa-log`, { kind: 'pending' })).status, 200);
+  const t = (await adm('POST', '/integrations/test-email', {})).body;
+  assert.equal(t.ok, false); assert.equal(t.status, 'not_configured');
+});
+
+test('só WhatsApp: marcar sem email, cliente reconhecida pelo telemóvel, lista de espera sem email, avaliação por WhatsApp', async () => {
+  const d = day(16);
+  await adm('PUT', `/day-slots/${d}`, { times: ['10:00', '11:00'] });
+  const r1 = await call('POST', '/api/public/bookings', { service_id: 1, start: at(d, '10:00'), accept_policy: true, name: 'Marta Sem Email', phone: '963 111 222', payment_method: 'mao' });
+  assert.equal(r1.status, 201, JSON.stringify(r1.body));
+  const r2 = await call('POST', '/api/public/bookings', { service_id: 1, start: at(d, '11:00'), accept_policy: true, name: 'Marta Sem Email', phone: '963111222' });
+  assert.equal(r2.status, 201);
+  const ids = db.prepare('SELECT customer_id c FROM bookings WHERE ref IN (?,?)').all(r1.body.ref, r2.body.ref);
+  assert.equal(ids[0].c, ids[1].c, 'a mesma ficha de cliente');
+  assert.equal((await call('POST', '/api/public/waitlist', { service_id: 1, name: 'Marta Sem Email', phone: '963111222' })).status < 300, true);
+  assert.equal((await call('POST', '/api/public/waitlist', { service_id: 1, name: 'Marta Sem Email', phone: '963 111 222' })).status, 409, 'duplicado pelo telemóvel');
+  const id = db.prepare('SELECT id FROM bookings WHERE ref=?').get(r1.body.ref).id;
+  let b = (await adm('GET', `/bookings/${id}`)).body;
+  assert.match(b.wa.pending, /aqui no espaço/);
+  db.prepare("UPDATE bookings SET status='completed', start_at=start_at-30*86400000, end_at=end_at-30*86400000 WHERE id=?").run(id);
+  b = (await adm('GET', `/bookings/${id}`)).body;
+  assert.match(b.review_url, /avaliar\.html\?t=/); assert.ok(b.wa.review.includes(b.review_url));
+  const tok = b.review_url.split('t=')[1];
+  assert.equal((await call('GET', `/api/public/review/${tok}`)).status, 200, 'o link de avaliação funciona');
+  assert.match(b.wa.cancelled, /foi cancelada/);
+});

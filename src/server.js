@@ -262,7 +262,16 @@ adm.get('/bookings', (req, res) => {
 const bookingDetail = id => {
   const b = db.prepare(`${BOOKING_SELECT} WHERE b.id=?`).get(id);
   if (!b) throw new AppError(404, 'NOT_FOUND', 'Marcação não encontrada.');
-  return { ...b,
+  const base = getSettings().public_base_url;
+  const manage_url = `${base}/gerir.html?t=${T.manageToken(b.ref, b.created_at)}`;
+  // link para avaliar (atendimento concluído): o mesmo que iria no email, agora enviado por WhatsApp
+  let review_url = '';
+  if (b.status === 'completed' && !db.prepare('SELECT 1 FROM reviews WHERE booking_id=?').get(id)) {
+    const tok = T.reviewToken(b.ref);
+    db.prepare('UPDATE bookings SET review_token_hash=? WHERE id=? AND review_token_hash IS NULL').run(T.hash(tok), id);
+    if (db.prepare('SELECT review_token_hash h FROM bookings WHERE id=?').get(id).h === T.hash(tok)) review_url = `${base}/avaliar.html?t=${tok}`;
+  }
+  return { ...b, manage_url, review_url, wa: N.waMessages(b, manage_url, review_url),
     events: db.prepare('SELECT at,actor,action,details FROM booking_events WHERE booking_id=? ORDER BY id').all(id),
     payments: db.prepare('SELECT * FROM payments WHERE booking_id=? ORDER BY paid_at, id').all(id),
     notifications: db.prepare('SELECT kind,status,recipient,error,created_at FROM notifications WHERE booking_id=? ORDER BY id DESC LIMIT 20').all(id) };
@@ -443,6 +452,7 @@ adm.get('/inbox', (req, res) => {
   const t = A.toLocal(Date.now()).plus({ days: 1 }).toISODate(), [a, b] = dayRange(t);
   const tomorrow = db.prepare(`${BOOKING_SELECT} WHERE b.status='confirmed' AND b.start_at BETWEEN ? AND ? ORDER BY b.start_at`).all(a, b);
   const pending = db.prepare("SELECT COUNT(*) n FROM bookings WHERE status='pending'").get().n;
+  for (const x of tomorrow) x.wa_reminder = N.waMessages(x, `${getSettings().public_base_url}/gerir.html?t=${T.manageToken(x.ref, x.created_at)}`).reminder;
   res.json({ seen_at: seen, unread: items.filter(i => i.at > seen).length, items, tomorrow, tomorrow_date: t, pending,
     emails: db.prepare('SELECT id,booking_id,kind,recipient,status,error,created_at FROM notifications ORDER BY id DESC LIMIT 60').all(), integrations: N.integrations() });
 });
@@ -607,6 +617,21 @@ adm.put('/hours', (req, res) => {
   res.json({ ok: true });
 });
 adm.get('/settings', (req, res) => res.json({ settings: getSettings(), integrations: N.integrations(), status: N.integrationStatus(), zones: A.ZONES }));
+// email de teste para a Adriana: confirma que a configuração do envio (ex.: iCloud) está certa
+adm.post('/integrations/test-email', wrap(async (req, res) => {
+  const s = getSettings();
+  if (!/@/.test(s.email || '')) throw new AppError(422, 'VALIDATION', 'Preenche primeiro o email do espaço em Definições → Negócio e contactos.');
+  if (!N.smtpConfigured()) return res.json({ ok: false, status: 'not_configured', error: 'O envio de email ainda não está configurado no servidor (SMTP_HOST e SMTP_FROM).' });
+  const ok = await N.sendEmail({ to: s.email, kind: 'test', subject: `Email de teste — ${s.business_name}`,
+    text: `Olá!\n\nEste é um email de teste enviado pelo painel. Se o estás a ler, as confirmações e os lembretes às clientes vão funcionar.\n\n${s.business_name}` });
+  const last = db.prepare("SELECT status, error FROM notifications WHERE kind='test' ORDER BY id DESC LIMIT 1").get() || {};
+  res.json({ ok, status: last.status, error: last.error || '', to: s.email });
+}));
+adm.post('/bookings/:id/wa-log', (req, res) => {
+  const L = { pending: 'pedido recebido', confirmed: 'pedido confirmado', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' };
+  const k = L[req.body.kind] ? req.body.kind : null; if (!k) throw new AppError(422, 'VALIDATION', 'Mensagem desconhecida.');
+  C.logEvent(int(req.params.id), 'painel', 'WhatsApp aberto', L[k]); res.json({ ok: true });
+});
 adm.get('/integrations', (req, res) => {
   const recent = db.prepare(`SELECT status, COUNT(*) n FROM notifications WHERE created_at > ? GROUP BY status`).all(Date.now() - 30 * 86400000);
   res.json({ ...N.integrationStatus(), last30: Object.fromEntries(recent.map(r => [r.status, r.n])) });

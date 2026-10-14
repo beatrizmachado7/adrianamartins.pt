@@ -142,7 +142,7 @@ function integrationStatus() {
   return {
     email: { configured: smtpConfigured(), missing, from: process.env.SMTP_FROM ? process.env.SMTP_FROM.replace(/^(.{2}).*(@.*)$/, '$1…$2') : '',
       auth: !!process.env.SMTP_USER, port: Number(process.env.SMTP_PORT || 587) },
-    whatsapp: { configured: false, available: false, note: 'Envio automático por WhatsApp não está incluído nesta versão. O site mostra apenas o botão "Falar por WhatsApp".' },
+    whatsapp: { configured: true, available: true, mode: 'one_tap', note: 'Mensagens com um toque: em cada marcação, o painel abre o teu WhatsApp com a mensagem já escrita. Só tens de carregar em Enviar.' },
     sms: { configured: false, available: false, note: 'Envio de SMS não está incluído nesta versão.' },
     jobs: process.env.JOBS !== 'off'
   };
@@ -157,4 +157,27 @@ function integrations() {
   };
 }
 
-module.exports = { notifyBooking, notifyBirthday, birthdayText, notifyWaitlistOffer, sendEmail, integrations, integrationStatus, fmtDate, fmtPrice, smtpConfigured };
+// ---------- WhatsApp com um toque: textos já preenchidos para cada marcação ----------
+const fill = (tpl, vars) => String(tpl || '').replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)).replace(/\n{3,}/g, '\n\n').trim();
+function waMessages(b, manageUrl, reviewUrl = '') {
+  const s = getSettings();
+  const paid = paidSoFar(b.id);
+  const dep = b.deposit_cents;
+  const mb = String(s.mbway_number || '').trim(), iban = String(s.iban || '').trim();
+  let sinal = '';
+  if (s.deposit_enabled) {
+    const v = dep != null ? eur(dep) : `${s.deposit_percent}% do valor`;
+    if (dep != null && paid >= dep) sinal = 'Já recebi o teu sinal, obrigada!';
+    else if (b.payment_method === 'mao') sinal = `Combinamos a entrega do sinal (${v}) aqui no espaço.`;
+    else if (b.payment_method === 'transferencia' && iban) sinal = `Para reservar, peço um sinal de ${v} por transferência para o IBAN ${iban}${s.iban_name ? ' (' + s.iban_name + ')' : ''}, com a referência ${b.ref}.`;
+    else if (mb) sinal = `Para reservar, peço um sinal de ${v} por MB WAY para o ${mb}, com a referência ${b.ref} na descrição. Assim que receber, confirmo a tua marcação.`;
+  }
+  const vars = { nome: String(b.customer_name || '').trim().split(/\s+/)[0], servico: b.service_name, data: toLocal(b.start_at).setLocale('pt-PT').toFormat("cccc, d 'de' LLLL"),
+    hora: toLocal(b.start_at).toFormat('HH:mm'), sinal: dep != null ? eur(dep) : '', sinal_texto: sinal, mbway: mb, iban, ref: b.ref, link: manageUrl,
+    morada: `${s.address_line}, ${s.postal_code} ${s.city}`.trim(), profissional: s.professional_name || s.business_name,
+    site: `${s.public_base_url}/marcar.html`, link_avaliacao: reviewUrl };
+  return { pending: fill(s.wa_tpl_pending, vars), confirmed: fill(s.wa_tpl_confirmed, vars), reminder: fill(s.wa_tpl_reminder, vars),
+    proposed: fill(s.wa_tpl_proposed, vars), cancelled: fill(s.wa_tpl_cancelled, vars), review: reviewUrl ? fill(s.wa_tpl_review, vars) : '' };
+}
+
+module.exports = { waMessages, notifyBooking, notifyBirthday, birthdayText, notifyWaitlistOffer, sendEmail, integrations, integrationStatus, fmtDate, fmtPrice, smtpConfigured };

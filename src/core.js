@@ -39,9 +39,11 @@ function getService(id, { includeInactive = false } = {}) {
   return s;
 }
 
+const last9 = p => String(p || '').replace(/\D/g, '').slice(-9);
 function upsertCustomer({ name, email, phone }, marketing) {
-  const ex = email ? db.prepare('SELECT * FROM customers WHERE email=?').get(email)
-    : db.prepare('SELECT * FROM customers WHERE email IS NULL AND phone=? AND name=?').get(phone, name);
+  // a mesma cliente é reconhecida pelo email (se indicado) ou pelo telemóvel
+  const ex = (email && db.prepare('SELECT * FROM customers WHERE email=?').get(email))
+    || db.prepare('SELECT * FROM customers WHERE phone IS NOT NULL ORDER BY id').all().find(c => last9(c.phone) && last9(c.phone) === last9(phone));
   if (ex) {
     db.prepare('UPDATE customers SET name=?, phone=? WHERE id=?').run(name, phone, ex.id);
     if (marketing === true && !ex.marketing_consent) db.prepare('UPDATE customers SET marketing_consent=1, marketing_consent_at=? WHERE id=?').run(Date.now(), ex.id);
@@ -98,7 +100,7 @@ function createBooking(input, { admin = false, offerId = null } = {}) {
     existing = db.prepare('SELECT * FROM customers WHERE id=?').get(Number(input.customer_id));
     if (!existing) throw new AppError(404, 'NOT_FOUND', 'Cliente não encontrada.');
   } else {
-    contact = validateContact(input, { emailOptional: admin });
+    contact = validateContact(input, { emailOptional: true }); // contacto principal: telemóvel (WhatsApp); email opcional
     if (admin && !input.force_new) {
       const m = findCustomerMatches(contact);
       if (m.length) throw new AppError(409, 'POSSIBLE_DUPLICATE', 'Já existe uma ficha com este telefone ou email. Escolhe se é a mesma cliente.', { matches: m });
@@ -381,13 +383,15 @@ function voidPayment(id, reason) {
 
 // ---------- lista de espera ----------
 function joinWaitlist(body) {
-  const contact = validateContact(body);
+  const contact = validateContact(body, { emailOptional: true });
+  contact.email = contact.email || '';
   const service = getService(body.service_id);
   const days = (Array.isArray(body.days) ? body.days : []).map(Number).filter(d => d >= 1 && d <= 7);
   const periods = (Array.isArray(body.periods) ? body.periods : []).filter(p => p in A.PERIODS);
   const dateOk = d => !d || A.parseDate(d);
   if (!dateOk(body.date_from) || !dateOk(body.date_to)) throw new AppError(422, 'VALIDATION', 'Datas inválidas.');
-  const dup = db.prepare("SELECT id FROM waitlist WHERE email=? AND service_id=? AND status IN ('active','offered')").get(contact.email, service.id);
+  const dup = db.prepare("SELECT id, phone, email FROM waitlist WHERE service_id=? AND status IN ('active','offered')").all(service.id)
+    .find(w => (contact.email && w.email === contact.email) || last9(w.phone) === last9(contact.phone));
   if (dup) throw new AppError(409, 'DUPLICATE', 'Já estás na lista de espera para este serviço. Aviso-te quando surgir uma vaga.');
   const id = db.prepare(`INSERT INTO waitlist(service_id,staff_id,name,email,phone,days,periods,date_from,date_to,created_at)
     VALUES(?,?,?,?,?,?,?,?,?,?)`).run(service.id, body.staff_id ? Number(body.staff_id) : null, contact.name, contact.email, contact.phone,

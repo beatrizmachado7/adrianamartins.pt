@@ -584,3 +584,17 @@ tr.click { cursor: pointer; } tr.click:hover td { background: #fffbf4; }
 }
 .av-dayrow .av-times { margin-bottom: 0; }
 .av-dayrow.av-none > b { color: var(--brown-500); font-weight: 500; }
+/* v5 — WhatsApp com um toque */
+.wa-box { margin-top: 16px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--cream); display: grid; gap: 10px; }
+.wa-h { display: flex; align-items: center; gap: 8px; font-weight: 600; flex-wrap: wrap; }
+.wa-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+#mail-test { margin-top: 8px; }
+#mail-test-msg .notice { margin-top: 10px; }
+code { font-size: .85em; background: var(--cream); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
+.wa-box.todo { border-color: #25a36a; background: #effaf3; }
+.wa-box.todo .btn:not(.secondary) { background: #1f8f5a; border-color: #1f8f5a; }
+.wa-tpl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; margin-bottom: 14px; }
+.wa-tpl .field .hint { display: block; margin: 0 0 6px; }
+.wa-prev { background: #e7f6ec; border-radius: 14px; padding: 12px 14px; margin-top: 26px; }
+.wa-prev p { white-space: pre-line; margin: 6px 0 0; font-size: .9rem; line-height: 1.45; color: #1f2b22; }
+@media (max-width: 760px) { .wa-tpl { grid-template-columns: 1fr; } .wa-prev { margin-top: 0; } }

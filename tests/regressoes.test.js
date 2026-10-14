@@ -45,8 +45,10 @@ test('pedido pendente a menos de 48 h pode ser retirado pela cliente; confirmado
   await adm('PUT', `/day-slots/${d}`, { times: ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'] });
   const t = DateTime.now().setZone(TZ).plus({ hours: 30 });
   const d2 = t.toISODate();
-  await adm('PUT', `/day-slots/${d2}`, { times: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'] });
-  const slot = at(d2, '20:00') > Date.now() + 25 * 3600000 ? at(d2, '20:00') : at(d2, '19:00');
+  // um horário a cerca de 30 h (entre 24 h e 48 h), qualquer que seja a hora a que o teste corre
+  const hh = t.startOf('hour').toFormat('HH:mm');
+  await adm('PUT', `/day-slots/${d2}`, { times: [hh] });
+  const slot = at(d2, hh);
   const r = await book(slot);
   assert.equal(r.status, 201); assert.equal(r.body.status, 'pending');
   assert.equal(r.body.can_cancel, true, 'um pedido ainda por confirmar pode ser retirado');

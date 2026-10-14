@@ -85,7 +85,7 @@
     $('#wl-service').innerHTML = services.map(s => `<option value="${s.id}" ${s.id === preset.service_id ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
     const openDays = cfg.hours.length ? [...new Set(cfg.hours.map(h => h.weekday))].sort() : [1, 2, 3, 4, 5, 6];
     $('#wl-days').innerHTML = openDays.map(d => `<label><input type="checkbox" name="days" value="${d}"><span>${S.DAYS[d]}</span></label>`).join('');
-    if (preset.contact) { form.name.value = preset.contact.name || ''; form.email.value = preset.contact.email || ''; form.phone.value = preset.contact.phone || ''; }
+    if (preset.contact) { form.name.value = preset.contact.name || ''; form.phone.value = preset.contact.phone || ''; }
     if (preset.date) form.date_from.value = preset.date;
     $('#wl-msg').innerHTML = '';
     form.querySelector('[type=submit]').hidden = false;
@@ -95,11 +95,11 @@
       e.preventDefault();
       const fd = new FormData(form);
       const body = { service_id: +fd.get('service_id'), staff_id: preset.staff_id || null, days: fd.getAll('days').map(Number), periods: fd.getAll('periods'),
-        date_from: fd.get('date_from') || null, date_to: fd.get('date_to') || null, name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone'), website: fd.get('hp_extra') };
+        date_from: fd.get('date_from') || null, date_to: fd.get('date_to') || null, name: fd.get('name'), phone: fd.get('phone'), website: fd.get('hp_extra') };
       const btn = form.querySelector('[type=submit]'); btn.disabled = true;
       try {
         await api('/waitlist', { method: 'POST', body });
-        $('#wl-msg').innerHTML = `<div class="notice ok" style="margin-bottom:14px">Pedido registado. ${cfg.integrations.email ? 'Quando surgir uma vaga compatível, envio-te um email com o prazo para reservares.' : 'Quando surgir uma vaga compatível, entro em contacto contigo.'}</div>`;
+        $('#wl-msg').innerHTML = `<div class="notice ok" style="margin-bottom:14px">Pedido registado. Quando surgir uma vaga compatível, aviso-te por WhatsApp.</div>`;
         btn.hidden = true;
       } catch (err) {
         $('#wl-msg').innerHTML = `<div class="notice err" style="margin-bottom:14px">${esc(err.message)}${err.data?.errors ? '<br>' + Object.values(err.data.errors).map(esc).join('<br>') : ''}</div>`;
@@ -202,15 +202,11 @@
           : '<p class="muted">Só peço o necessário para a marcação.</p>'}
         <form id="details-form" novalidate>
           <div class="field"><label for="f-name">Nome</label><input class="input" id="f-name" name="name" autocomplete="name" value="${esc(c.name)}" required><span class="err-msg" id="e-name"></span></div>
-          <div class="field"><label for="f-email">Email</label><input class="input" id="f-email" type="email" name="email" autocomplete="email" inputmode="email" value="${esc(c.email)}" required>
-            <span class="hint">Para a confirmação e o link para gerires a marcação.</span><span class="err-msg" id="e-email"></span></div>
-          <div class="field"><label for="f-phone">Telefone</label><input class="input" id="f-phone" type="tel" name="phone" autocomplete="tel" inputmode="tel" value="${esc(c.phone)}" required>
-            <span class="err-msg" id="e-phone"></span></div>
+          <div class="field"><label for="f-phone">Telemóvel (WhatsApp)</label><input class="input" id="f-phone" type="tel" name="phone" autocomplete="tel" inputmode="tel" value="${esc(c.phone)}" required>
+            <span class="hint">É por aqui que te envio a confirmação e o link para gerires a marcação.</span><span class="err-msg" id="e-phone"></span></div>
           <label class="check"><input type="checkbox" name="remember" ${c.remember !== false ? 'checked' : ''}>
             <span>Lembrar os meus dados neste aparelho (para a próxima marcação ser mais rápida)</span></label>
           <input class="hp" tabindex="-1" autocomplete="off" name="hp_extra" aria-hidden="true">
-          <label class="check"><input type="checkbox" name="marketing" ${c.marketing ? 'checked' : ''}>
-            <span>Quero receber novidades por email (opcional). Os avisos sobre a marcação são sempre enviados.</span></label>
           <button class="btn block" style="margin-top:14px" type="submit">Continuar</button>
         </form>`;
     },
@@ -223,7 +219,7 @@
           <dt>Data</dt><dd>${fmt.date(st.slot.start)}</dd>
           <dt>Hora</dt><dd>${st.slot.time}</dd>
           ${multiStaff() ? `<dt>Profissional</dt><dd>${st.staff ? esc(staffName(st.staff)) : (st.slot.staff?.length === 1 ? esc(st.slot.staff[0].name) : 'Sem preferência')}</dd>` : ''}
-          <dt>Nome</dt><dd>${esc(st.contact.name)}</dd><dt>Email</dt><dd style="word-break:break-all">${esc(st.contact.email)}</dd><dt>Telefone</dt><dd>${esc(st.contact.phone)}</dd>
+          <dt>Nome</dt><dd>${esc(st.contact.name)}</dd><dt>Telemóvel</dt><dd>${esc(st.contact.phone)}</dd>
         </dl><button class="link-btn small" data-back="when">Alterar dia ou hora</button></div>
         ${payChoice(s)}
         ${s.requires_approval ? `<div class="notice" style="margin-bottom:14px">Confirmo a tua marcação no prazo máximo de 24 horas. Até lá, o horário fica reservado para ti durante ${cfg.pending_hold_hours} horas.</div>` : ''}
@@ -233,16 +229,22 @@
         <button class="btn block" id="confirm" style="margin-top:12px" ${canSend() ? '' : 'disabled'}>${s.requires_approval ? 'Enviar pedido' : 'Confirmar marcação'}</button>`;
     },
     done() {
-      const b = st.result, pending = b.status === 'pending', email = cfg.integrations.email;
+      const b = st.result, pending = b.status === 'pending';
       const link = `${location.origin}/gerir.html?t=${encodeURIComponent(b.token)}`;
       const when = `${fmt.date(b.start, { weekday: undefined })}`;
+      // sem email: a cliente envia o pedido à Adriana por WhatsApp (fica com a conversa aberta para o sinal e a confirmação)
+      const pay = b.payment_method ? ` Pagamento: ${S.PAY_OPTS[b.payment_method]}.` : '';
+      const waText = `Olá Adriana! Acabei de fazer um ${pending ? 'pedido de marcação' : 'marcação'} no site:\n${b.service_name}, ${fmt.dateTime(b.start)}.\nReferência: ${b.ref}.${pay}\nNome: ${st.contact.name}`;
+      const wa = cfg.whatsapp ? S.waLink(cfg.whatsapp) + '?text=' + encodeURIComponent(waText) : '';
       return `<div class="success step">
         <div class="ok-icon">${icon(pending ? 'clock' : 'check')}</div>
         ${stateTag(pending ? 'pending' : 'confirmed')}
         <h2>${pending ? 'Pedido recebido — aguarda confirmação' : 'Marcação confirmada'}</h2>
-        <p class="lead" style="margin:0 auto 22px">${pending
-          ? (email ? 'Vou informar-te por email assim que a tua marcação for aprovada.' : 'Vou informar-te assim que a tua marcação for aprovada.') + ` O horário fica reservado para ti até ${fmt.dateTime(b.hold_expires_at)}.`
-          : `A tua marcação está confirmada. Espero por ti no dia ${when}, às ${fmt.time(b.start)}.${email ? ' Enviei os detalhes para o teu email.' : ''}`}</p>
+        <p class="lead" style="margin:0 auto 18px">${pending
+          ? `Confirmo a tua marcação por WhatsApp, no máximo em 24 horas. O horário fica reservado para ti até ${fmt.dateTime(b.hold_expires_at)}.`
+          : `A tua marcação está confirmada. Espero por ti no dia ${when}, às ${fmt.time(b.start)}.`}</p>
+        ${wa ? `<div class="wa-send"><p><strong>Último passo:</strong> envia-me o pedido por WhatsApp — a mensagem já vai escrita.</p>
+          <a class="btn block wa-btn" href="${wa}" target="_blank" rel="noopener">${icon('phone')} Enviar por WhatsApp</a></div>` : ''}
         <div class="review-box"><dl>
           <dt>Serviço</dt><dd>${esc(b.service_name)}</dd><dt>Data</dt><dd>${fmt.dateTime(b.start)}</dd>
           <dt>Preço</dt><dd>${fmt.price(b.price_cents, b.price_type)}</dd>${cfg.staff.length > 1 ? `<dt>Profissional</dt><dd>${esc(b.staff_name)}</dd>` : ''}
@@ -250,10 +252,10 @@
           ${b.payment_method ? `<dt>Pagamento</dt><dd>${esc(S.PAY_OPTS[b.payment_method] || '')}</dd>` : ''}
         </dl></div>
         ${S.payInfo(b, cfg)}
-        <div class="notice info small" style="text-align:left">Para consultares, cancelares ou reagendares, usa este link privado${email ? ' (também está no email)' : ''}:<br><a href="${link}" style="word-break:break-all">${esc(link)}</a></div>
+        <div class="notice info small" style="text-align:left">Guarda este link privado para consultares, cancelares ou reagendares (também to envio por WhatsApp):<br><a href="${link}" style="word-break:break-all">${esc(link)}</a></div>
         <div class="actions-row">
           ${pending ? '' : `<a class="btn secondary" href="${icsFile(b, cfg)}" download="marcacao-${esc(b.ref)}.ics">${icon('calendar')} Adicionar ao calendário</a>`}
-          <a class="btn" href="${link}">Gerir marcação</a>
+          <a class="btn secondary" href="${link}">Gerir marcação</a>
         </div></div>`;
     }
   };
@@ -271,7 +273,7 @@
     return `<fieldset class="pay-choice"><legend>Como preferes pagar?</legend>
       <p>Para reservar o dia e a hora, peço um sinal de ${dep != null ? `<b>${S.eur(dep)}</b> (${pct}% do valor)` : `<b>${pct}% do valor</b> (combinamos contigo o valor)`}. Os restantes ${100 - pct}% pagas no final do serviço.</p>
       <div class="pay-opts">${opts.map(([k, l, d]) => `<label class="pay-opt"><input type="radio" name="pay" value="${k}" ${st.pay === k ? 'checked' : ''}><span><b>${l}</b><small>${d}</small></span></label>`).join('')}</div>
-      <p class="small" style="margin:10px 0 0">Mostro-te os dados para o pagamento a seguir, e também seguem no email.</p></fieldset>`;
+      <p class="small" style="margin:10px 0 0">Mostro-te os dados para o pagamento a seguir.</p></fieldset>`;
   }
   const canSend = () => st.accepted && (!needPay() || !!st.pay);
 
@@ -322,13 +324,13 @@
     if (st.step === 'details') $('#details-form').onsubmit = e => {
       e.preventDefault();
       const f = e.target; let ok = true;
-      const checks = { name: v => v.trim().length >= 2 || 'Indica o teu nome.', email: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) || 'Indica um email válido.',
+      const checks = { name: v => v.trim().length >= 2 || 'Indica o teu nome.',
         phone: v => v.replace(/\D/g, '').length >= 9 || 'Indica um telefone válido (ex.: 912 345 678).' };
       for (const [k, fn] of Object.entries(checks)) {
         const r = fn(f[k].value); f[k].setAttribute('aria-invalid', r !== true); $('#e-' + k).textContent = r === true ? '' : r;
         if (r !== true && ok) { f[k].focus(); ok = false; }
       }
-      st.contact = { name: f.name.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), marketing: f.marketing.checked, website: f.hp_extra.value, remember: f.remember.checked };
+      st.contact = { name: f.name.value.trim(), email: '', phone: f.phone.value.trim(), marketing: false, website: f.hp_extra.value, remember: f.remember.checked };
       if (ok) go('review');
     };
     if (st.step === 'review') {
@@ -340,7 +342,7 @@
         btn.disabled = true; btn.textContent = 'A confirmar…';
         try {
           st.result = await api('/bookings', { method: 'POST', body: { service_id: st.service.id, staff_id: st.staff, start: st.slot.start, name: st.contact.name,
-            email: st.contact.email, phone: st.contact.phone, marketing_consent: st.contact.marketing, accept_policy: true, website: st.contact.website, payment_method: needPay() ? st.pay : undefined } });
+            phone: st.contact.phone, marketing_consent: false, accept_policy: true, website: st.contact.website, payment_method: needPay() ? st.pay : undefined } });
           if (st.contact.remember) S.me.set(st.contact); else S.me.clear();
           history.replaceState({ step: 'done' }, '', location.pathname);
           render(); scrollTo({ top: 0, behavior: 'smooth' });

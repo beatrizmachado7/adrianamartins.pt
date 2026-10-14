@@ -881,3 +881,6 @@ body[data-page="servicos"] .page-head { background: transparent; }
 .offline-box { background: var(--cream); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 22px; max-width: 620px; }
 .offline-box h2 { margin: 0 0 8px; }
 .offline-box .actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 12px; }
+/* v27 — fim da marcação: enviar o pedido por WhatsApp */
+.wa-send { text-align: left; background: #fff; border: 1.5px solid var(--brown-900); border-radius: var(--radius); padding: 16px 18px; margin: 0 0 18px; }
+.wa-send p { margin: 0 0 12px; font-size: .95rem; }

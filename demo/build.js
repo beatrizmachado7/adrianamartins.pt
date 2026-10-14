@@ -36,9 +36,7 @@ css = css.replace(/url\("\/assets\/fonts\/([^"]+)"\)/g, (m, f) => `url("data:fon
 const IMG = Object.fromEntries(fs.readdirSync(P('assets/img')).map(f => ['/assets/img/' + f, 'data:image/' + (f.endsWith('.webp') ? 'webp' : f.endsWith('.png') ? 'png' : 'jpeg') + ';base64,' + fs.readFileSync(P('assets/img/' + f)).toString('base64')]));
 const patch = src => Object.entries(IMG).reduce((t, [k, v]) => t.split(k).join(v), src.replace(/document\.addEventListener\('DOMContentLoaded',/g, '__ready('));
 let admin = read(P('admin/admin.js'));
-admin = admin.replace("[n.status] || esc(n.status)}</span></li>`",
-  "[n.status] || esc(n.status)}</span>${n.demo_link ? ` · <a href=\"${esc(n.demo_link)}\">Abrir o link que a cliente receberia</a>` : ''}</li>`");
-if (!admin.includes('demo_link')) throw new Error('patch das notificações falhou (admin.js mudou)');
+// (a demonstração já não mostra a lista de emails: as mensagens às clientes são por WhatsApp)
 let client = read(P('assets/client.js')).replace("'tk:' + location.pathname", "'tk:' + document.body.dataset.page");
 const SCRIPTS = { site: read(P('assets/site.js')), pages: read(P('assets/pages.js')), booking: read(P('assets/booking.js')), client, admin: read(P('admin/vendor/qrcode.js')) + '\n' + admin };
 const fns = Object.entries(SCRIPTS).map(([k, s]) => `${JSON.stringify(k)}: function (location, history, addEventListener, __ready) {\n${patch(s)}\n}`).join(',\n');

@@ -33,7 +33,7 @@
     business_name: 'ADRIANA MARTINS', hero_title: 'Um momento para cuidar de ti.',
     hero_subtitle: 'Manicure, pedicure, lash lifting e depilação a cera e a laser, em Massamá. Marca o teu próximo momento de bem-estar.',
     legal_id: '[IDENTIFICAÇÃO DO NEGÓCIO — nome legal e NIF]', access_info: '',
-    booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e recebes a resposta por email. Se precisar de propor outro horário, também te aviso por email e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
+    booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e envio-te a resposta por WhatsApp. Se precisar de propor outro horário, também te aviso por WhatsApp e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
     address_line: 'Avenida Américo Ferrer Lopes Loja 11C', postal_code: '2745-715', city: 'Massamá', phone: '939 907 962', email: 'amartinsestetica@icloud.com', whatsapp: '939 907 962', instagram: 'https://www.instagram.com/estetica_adrianamartins/',
     map_embed_url: '', map_link_url: '', professional_name: 'Adriana Martins',
     about_text: 'Sou a Adriana Martins, esteticista. O meu objetivo é ajudar cada cliente a sentir-se bem consigo, através de cuidados que valorizam a sua beleza natural. Acredito num atendimento próximo e atento, onde há espaço para ouvir as suas necessidades e tornar cada visita num momento de cuidado pessoal.',
@@ -48,18 +48,24 @@
     hero_image: '/assets/img/hero-adriana.webp', about_image: '/assets/img/adriana.webp', gallery: ['/assets/img/espaco-logo.webp', '/assets/img/espaco-atendimento.webp', '/assets/img/espaco-detalhe.webp', '/assets/img/espaco-espera.webp'],
     video_url: 'https://www.instagram.com/reel/DaVIOYGsrlj/', video_file: '/assets/video/espaco.mp4', video_image: '/assets/img/video-capa.webp',
     timezone: 'Europe/Lisbon', slot_step_min: 60, buffer_min: 0, min_notice_hours: 24, max_advance_days: 60, cancel_limit_hours: 48, reschedule_limit_hours: 48,
-    cancellation_policy: 'Os cancelamentos e reagendamentos têm de ser feitos com pelo menos 48 horas de antecedência em relação à hora marcada. Podes fazê-lo através do link que recebes no email de confirmação, ou contactando-me diretamente.\n\nA menos de 48 horas da marcação já não é possível cancelar nem reagendar pelo site. Nesse caso, contacta-me o mais cedo possível por telefone.\n\nSe cancelares com pelo menos 48 horas de antecedência, devolvo o sinal ou guardo-o para uma nova marcação, como preferires. A menos de 48 horas, ou em caso de falta, o sinal não é devolvido.\n\nFaltar sem avisar impede outra cliente de usar esse horário. Em caso de faltas repetidas sem aviso, posso deixar de aceitar marcações online.',
+    cancellation_policy: 'Os cancelamentos e reagendamentos têm de ser feitos com pelo menos 48 horas de antecedência em relação à hora marcada. Podes fazê-lo através do link da tua marcação (que também te envio por WhatsApp), ou contactando-me diretamente.\n\nA menos de 48 horas da marcação já não é possível cancelar nem reagendar pelo site. Nesse caso, contacta-me o mais cedo possível por telefone.\n\nSe cancelares com pelo menos 48 horas de antecedência, devolvo o sinal ou guardo-o para uma nova marcação, como preferires. A menos de 48 horas, ou em caso de falta, o sinal não é devolvido.\n\nFaltar sem avisar impede outra cliente de usar esse horário. Em caso de faltas repetidas sem aviso, posso deixar de aceitar marcações online.',
     pending_hold_hours: 24, waitlist_offer_minutes: 120, waitlist_max_offers: 3, reminder_enabled: true, reminder_hours: 24, review_invite_delay_hours: 0,
     register_enabled: true, register_title: 'Regista-te',
     register_intro: 'Deixa os teus dados uma vez: nas próximas marcações fica tudo mais rápido e, no teu aniversário, recebes uma mensagem minha.',
     birthday_message: 'Olá {nome}, muitos parabéns! 🎂\n\nHoje o dia é todo teu e merece ser celebrado com tudo aquilo que te faz feliz. Obrigada por me deixares fazer parte dos teus momentos de cuidado — é sempre um gosto enorme receber-te.\n\nQue este novo ano te traga saúde, alegria e muitos motivos para sorrir.\n\nUm beijinho grande,\n{profissional}', birthday_email_enabled: false,
     deposit_enabled: true, deposit_percent: 50, mbway_number: '939 907 962', iban: '', iban_name: '',
     payment_note: 'Os restantes 50% são pagos no final do serviço.',
+    wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pelo teu pedido de marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar o teu pedido aqui: {link}\n\nUm beijinho,\n{profissional}',
+    wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
+    wa_tpl_proposed: 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}',
+    wa_tpl_cancelled: 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}',
+    wa_tpl_review: 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}',
+    wa_tpl_reminder: 'Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}',
     arrival_note: 'Chega 5 minutos antes. Se tiveres alguma dúvida sobre a preparação, contacta-me antes da visita.',
     faq: [
-      { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome, email e telefone. Confirmo a marcação no prazo máximo de 24 horas e recebes a confirmação por email, com um link para gerires a marcação.' },
-      { q: 'Posso cancelar ou reagendar?', a: 'Sim, até 48 horas antes da hora marcada, pelo link privado que recebes no email de confirmação. A menos de 48 horas, contacta-me diretamente por telefone.' },
-      { q: 'O que significa "Pedido pendente de confirmação"?', a: 'Todas as marcações são confirmadas por mim. O horário fica reservado para ti e respondo no prazo máximo de 24 horas; recebes um email assim que o pedido for aceite ou se precisar de propor outro horário.' },
+      { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome e telemóvel. Confirmo a marcação no prazo máximo de 24 horas e envio-te a confirmação por WhatsApp, com um link para gerires a marcação.' },
+      { q: 'Posso cancelar ou reagendar?', a: 'Sim, até 48 horas antes da hora marcada, pelo link privado da tua marcação (que também te envio por WhatsApp). A menos de 48 horas, contacta-me diretamente por telefone.' },
+      { q: 'O que significa "Pedido pendente de confirmação"?', a: 'Todas as marcações são confirmadas por mim. O horário fica reservado para ti e respondo no prazo máximo de 24 horas; envio-te uma mensagem por WhatsApp assim que o pedido for aceite ou se precisar de propor outro horário.' },
       { q: 'Como me preparo para a visita?', a: 'Chega com alguns minutos de antecedência. Se o serviço exigir algum cuidado prévio, indico na descrição do serviço ou entro em contacto contigo.' },
       { q: 'E se o horário que quero estiver ocupado?', a: 'Aparecem as alternativas mais próximas e podes entrar na lista de espera. Se surgir uma vaga compatível, envio-te um aviso com prazo para reservares.' }],
     privacy_controller: '[RESPONSÁVEL PELO TRATAMENTO DE DADOS — nome/empresa e NIF]', public_base_url: 'https://[o-seu-site].pt',
@@ -241,7 +247,7 @@
   }
   const matches = c => S.customers.filter(x => (digits(c.phone).length >= 9 && digits(x.phone) === digits(c.phone)) || (c.email && x.email && x.email === c.email)).map(x => ({ id: x.id, name: x.name, email: x.email, phone: x.phone }));
   function upsert(c, marketing) {
-    let x = c.email ? S.customers.find(k => k.email === c.email) : S.customers.find(k => !k.email && k.phone === c.phone && k.name === c.name);
+    let x = (c.email && S.customers.find(k => k.email === c.email)) || S.customers.find(k => digits(k.phone).slice(-9) && digits(k.phone).slice(-9) === digits(c.phone).slice(-9));
     if (x) { x.name = c.name; x.phone = c.phone; if (marketing) x.marketing_consent = 1; return x.id; }
     x = { id: id(), ...c, marketing_consent: marketing ? 1 : 0, notes: '', created_at: Date.now() }; S.customers.push(x); return x.id;
   }
@@ -253,7 +259,7 @@
     let existing = null, c = null;
     if (admin && inp.customer_id) { existing = S.customers.find(x => x.id === +inp.customer_id); if (!existing) throw new E(404, 'Cliente não encontrada.'); }
     else {
-      c = contact(inp, admin);
+      c = contact(inp, true);
       if (admin && !inp.force_new) { const m = matches(c); if (m.length) throw new E(409, 'Já existe uma ficha com este telefone ou email. Escolhe se é a mesma cliente.', { code: 'POSSIBLE_DUPLICATE', matches: m }); }
       if (admin && c.email && S.customers.some(x => x.email === c.email)) throw new E(409, 'Este email já pertence a outra ficha de cliente. Usa essa ficha ou deixa o email em branco.');
     }
@@ -479,6 +485,16 @@
           (s.reviews ||= []).push({ id: ++s.seq, booking_id: b.id, rating, comment, author_name: c.name.split(' ')[0] + ' (demo)', service_name: b.service_name, verified: 1, status: i === 2 ? 'pending' : 'published', hidden_reason: '', reply: '', created_at: b.start_at + 3 * H, demo: true }); });
     }
   }
+  function migrate22() { if (S.v22) return; S.v22 = true; const st = S.settings;
+    if (st.wa_tpl_pending === 'Olá {nome}! Recebi o teu pedido de marcação para {servico}, {data} às {hora}. 😊\n\n{sinal_texto}\n\nPodes ver o teu pedido aqui: {link}\n\n{profissional}') st.wa_tpl_pending = DEFAULTS.wa_tpl_pending;
+    if (st.wa_tpl_confirmed === 'Olá {nome}! A tua marcação está confirmada: {servico}, {data} às {hora}. 🤍\n\nMorada: {morada}\n\nSe precisares de alterar, usa este link (até 48 horas antes): {link}\n\nAté breve!\n{profissional}') st.wa_tpl_confirmed = DEFAULTS.wa_tpl_confirmed; dirty = true; }
+  function migrate21() { if (S.v21) return; S.v21 = true; const st = S.settings;
+    for (const k of ['wa_tpl_proposed', 'wa_tpl_cancelled', 'wa_tpl_review']) if (!(k in st)) st[k] = DEFAULTS[k];
+    const old = /por email|no email de confirmação|nome, email e telefone|recebes um email/;
+    for (const k of ['booking_policy', 'cancellation_policy']) if (old.test(st[k] || '')) st[k] = DEFAULTS[k];
+    if ((st.faq || []).some(f => old.test(f.a))) st.faq = JSON.parse(JSON.stringify(DEFAULTS.faq));
+    dirty = true; }
+  function migrate20() { if (S.v20) return; S.v20 = true; for (const k of ['wa_tpl_pending', 'wa_tpl_confirmed', 'wa_tpl_reminder', 'wa_tpl_proposed', 'wa_tpl_cancelled', 'wa_tpl_review']) if (!(k in S.settings)) S.settings[k] = DEFAULTS[k]; dirty = true; }
   function migrate19() { if (S.v19) return; S.v19 = true; (S.services || []).forEach(x => { if (x.name === 'Lash Lifting' && x.price_cents == null) { x.price_cents = 2000; x.price_type = 'fixed'; } }); dirty = true; }
   function migrate18() {
     if (S.v18) return; S.v18 = true;
@@ -503,7 +519,7 @@
   function migrate15() { if (S.v15) return; S.v15 = true; for (const k of ['space_title', 'space_text', 'space_image', 'space_points']) if (!(k in S.settings)) S.settings[k] = JSON.parse(JSON.stringify(DEFAULTS[k])); dirty = true; }
   function migrate14() { if (S.v14) return; S.v14 = true; if (!S.settings.whatsapp) S.settings.whatsapp = '939 907 962'; dirty = true; }
   if (!S || !S.settings) S = seed();
-  migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19();
+  migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22();
   const save = () => {
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem armazenamento: fica em memória */ }
     if (dirty && window.DemoAPI && window.DemoAPI.onSave) window.DemoAPI.onSave(S);
@@ -531,7 +547,24 @@
     const rem = S.notifications.find(n => n.booking_id === b.id && n.kind === 'reminder');
     return { ...rest, staff_name: staffName(b.staff_id), customer_name: c.name, customer_email: c.email, customer_phone: c.phone, paid_cents: paidOf(b.id), reminder_status: rem ? rem.status : null, proposed: b.proposed || 0 };
   };
-  const detail = b => ({ ...SEL(b), events: (S.events || []).filter(e => e.booking_id === b.id).sort((x, y) => x.at - y.at), payments: S.payments.filter(p => p.booking_id === b.id).sort((x, y) => x.paid_at - y.paid_at),
+  const waMessages = b => {
+    const st = S.settings, paid = paidOf(b.id), dep = b.deposit_cents, eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+    const mb = String(st.mbway_number || '').trim(), iban = String(st.iban || '').trim(); let sinal = '';
+    if (st.deposit_enabled) { const v = dep != null ? eur(dep) : `${st.deposit_percent}% do valor`;
+      if (dep != null && paid >= dep) sinal = 'Já recebi o teu sinal, obrigada!';
+      else if (b.payment_method === 'mao') sinal = `Combinamos a entrega do sinal (${v}) aqui no espaço.`;
+      else if (b.payment_method === 'transferencia' && iban) sinal = `Para reservar, peço um sinal de ${v} por transferência para o IBAN ${iban}, com a referência ${b.ref}.`;
+      else if (mb) sinal = `Para reservar, peço um sinal de ${v} por MB WAY para o ${mb}, com a referência ${b.ref} na descrição. Assim que receber, confirmo a tua marcação.`; }
+    const c = S.customers.find(x => x.id === b.customer_id) || {};
+    const d = new Date(b.start_at), fmt = o => new Intl.DateTimeFormat('pt-PT', { timeZone: 'Europe/Lisbon', ...o }).format(d);
+    const vars = { nome: String(c.name || '').split(' ')[0], servico: b.service_name, data: fmt({ weekday: 'long', day: 'numeric', month: 'long' }), hora: fmt({ hour: '2-digit', minute: '2-digit' }),
+      sinal: dep != null ? eur(dep) : '', sinal_texto: sinal, mbway: mb, iban, ref: b.ref, link: location.origin + '/gerir.html?t=' + b.token, morada: `${st.address_line}, ${st.postal_code} ${st.city}`, profissional: st.professional_name || st.business_name,
+      site: location.origin + '/marcar.html', link_avaliacao: '' };
+    if (b.status === 'completed' && !S.reviews.some(r => r.booking_id === b.id)) { b.review_token ||= rnd(); vars.link_avaliacao = location.origin + '/avaliar.html?t=' + b.review_token; }
+    const fill = t => String(t || '').replace(/\{(\w+)\}/g, (m, k) => k in vars ? vars[k] : m).replace(/\n{3,}/g, '\n\n').trim();
+    return { pending: fill(st.wa_tpl_pending), confirmed: fill(st.wa_tpl_confirmed), reminder: fill(st.wa_tpl_reminder), proposed: fill(st.wa_tpl_proposed), cancelled: fill(st.wa_tpl_cancelled), review: vars.link_avaliacao ? fill(st.wa_tpl_review) : '' };
+  };
+  const detail = b => ({ ...SEL(b), wa: waMessages(b), events: (S.events || []).filter(e => e.booking_id === b.id).sort((x, y) => x.at - y.at), payments: S.payments.filter(p => p.booking_id === b.id).sort((x, y) => x.paid_at - y.paid_at),
     notifications: S.notifications.filter(n => n.booking_id === b.id).slice(0, 20).map(n => ({ kind: n.kind, status: n.status, recipient: n.recipient, error: n.error, created_at: n.created_at, demo_link: n.demo_link })) });
   const dayRange = d => [lisbon(d), lisbon(addDays(d, 1)) - 1];
   const nextMonth = mo => { const [y, m] = mo.split('-').map(Number); return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`; };
@@ -576,7 +609,7 @@
     waitlist_offer_minutes: [10, 2880], waitlist_max_offers: [1, 10], reminder_hours: [1, 168], review_invite_delay_hours: [0, 168] };
   const ZONES = ['Europe/Lisbon', 'Atlantic/Madeira', 'Atlantic/Azores'];
   const INTEGR = { email: { configured: false, missing: ['SMTP_HOST', 'SMTP_FROM'], from: '', auth: false, port: 587 },
-    whatsapp: { configured: false, available: false, note: 'Envio automático por WhatsApp não está incluído nesta versão. O site mostra apenas o botão "Falar por WhatsApp".' },
+    whatsapp: { configured: true, available: true, mode: 'one_tap', note: 'Mensagens com um toque: em cada marcação, o painel abre o teu WhatsApp com a mensagem já escrita. Só tens de carregar em Enviar.' },
     sms: { configured: false, available: false, note: 'Envio de SMS não está incluído nesta versão.' }, jobs: true };
   const isoQ = (v, end) => /^\d{4}-\d\d-\d\d$/.test(v || '') ? (end ? dayRange(v)[1] : lisbon(v)) : +v || 0;
 
@@ -626,8 +659,8 @@
       return { ok: true };
     }, 201],
     ['POST', /^\/api\/public\/waitlist$/, (m, q, b) => {
-      const c = contact(b); const svc = svcById(b.service_id); if (!svc) throw new E(404, 'Serviço não encontrado.');
-      if (S.waitlist.some(w => w.email === c.email && w.service_id === svc.id && ['active', 'offered'].includes(w.status))) throw new E(409, 'Já estás na lista de espera para este serviço. Aviso-te quando surgir uma vaga.');
+      const c = contact(b, true); c.email = c.email || ''; const svc = svcById(b.service_id); if (!svc) throw new E(404, 'Serviço não encontrado.');
+      if (S.waitlist.some(w => ((c.email && w.email === c.email) || digits(w.phone) === digits(c.phone)) && w.service_id === svc.id && ['active', 'offered'].includes(w.status))) throw new E(409, 'Já estás na lista de espera para este serviço. Aviso-te quando surgir uma vaga.');
       const w = { id: id(), service_id: svc.id, staff_id: b.staff_id ? +b.staff_id : null, ...c, days: (b.days || []).map(Number), periods: (b.periods || []).filter(p => p in PER),
         date_from: b.date_from || null, date_to: b.date_to || null, status: 'active', offers_count: 0, skipped: [], notes: '', source: 'online', contacted_at: null, created_at: Date.now() };
       S.waitlist.push(w); return { ok: true, id: w.id };
@@ -768,6 +801,8 @@
     ['GET', /^\/api\/admin\/hours$/, () => S.hours.slice().sort((a, b) => a.weekday - b.weekday || a.start.localeCompare(b.start))],
     ['PUT', /^\/api\/admin\/hours$/, (m, q, b) => { S.hours = vh(b.hours).map(h => ({ weekday: +h.weekday, start: h.start, end: h.end })); S.settings.hours_confirmed = true; return { ok: true }; }],
     ['GET', /^\/api\/admin\/settings$/, () => ({ settings: S.settings, integrations: { email: false, whatsapp: false, sms: false }, status: INTEGR, zones: ZONES })],
+    ['POST', /^\/api\/admin\/integrations\/test-email$/, () => ({ ok: false, status: 'not_configured', error: 'Na demonstração não são enviados emails.' })],
+    ['POST', /^\/api\/admin\/bookings\/(\d+)\/wa-log$/, (m, q, body) => { const L = { pending: 'pedido recebido', confirmed: 'pedido confirmado', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' }; if (!L[body.kind]) throw new E(422, 'Mensagem desconhecida.'); ev(bk(m[1]), 'painel', 'WhatsApp aberto', L[body.kind]); return { ok: true }; }],
     ['GET', /^\/api\/admin\/integrations$/, () => { const l = {}; S.notifications.filter(n => n.created_at > Date.now() - 30 * D).forEach(n => { l[n.status] = (l[n.status] || 0) + 1; }); return { ...INTEGR, last30: l }; }],
     ['PUT', /^\/api\/admin\/settings$/, (m, q, b) => {
       for (const [k, v] of Object.entries(b)) {
@@ -880,7 +915,7 @@
         return { id: e.id, at: e.at, actor: e.actor, action: e.action, details: e.details, booking_id: e.booking_id, status: b.status, start_at: b.start_at, service_name: b.service_name, customer_name: c.name, customer_phone: c.phone };
       });
       const t = addDays(today(), 1), [a, z] = dayRange(t);
-      return { seen_at: seen, unread: items.filter(i => i.at > seen).length, items, tomorrow: S.bookings.filter(b => b.status === 'confirmed' && b.start_at >= a && b.start_at <= z).map(SEL).sort((x, y) => x.start_at - y.start_at),
+      return { seen_at: seen, unread: items.filter(i => i.at > seen).length, items, tomorrow: S.bookings.filter(b => b.status === 'confirmed' && b.start_at >= a && b.start_at <= z).map(b => ({ ...SEL(b), wa_reminder: waMessages(b).reminder })).sort((x, y) => x.start_at - y.start_at),
         tomorrow_date: t, pending: S.bookings.filter(b => b.status === 'pending').length, emails: S.notifications.slice(0, 60), integrations: { email: false, whatsapp: false, sms: false } };
     }],
     ['GET', /^\/api\/admin\/inbox\/count$/, () => { const seen = (S.meta || {}).inbox_seen_at || Date.now() - 3 * D;
@@ -941,7 +976,7 @@
     reset() { const te = S.textEdits; try { localStorage.removeItem(KEY); } catch { /* */ } S = seed(); S.textEdits = te || {}; dirty = true; save(); },
     jobs: () => { jobs(); save(); },
     state: () => S,
-    load(st) { if (st && st.settings) { S = st; migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); jobs(); save(); } },
+    load(st) { if (st && st.settings) { S = st; migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); jobs(); save(); } },
     setField(kind, id, field, v) {
       const list = kind === 'cat' ? S.categories : S.services, x = list.find(e => e.id === +id);
       if (x && field in x) { x[field] = v; if (kind === 'svc' && field === 'name') S.bookings.forEach(b => { if (b.service_id === x.id && b.start_at > Date.now() && ACTIVE(b)) b.service_name = v; }); dirty = true; save(); }

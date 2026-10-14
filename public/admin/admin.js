@@ -195,7 +195,7 @@
     try { b = await api(`/bookings/${id}`); } catch (e) { dlg.close(); return toast(e.message, 'err'); }
     const past = b.start_at <= Date.now();
     const due = b.price_cents == null ? null : b.price_cents - b.paid_cents;
-    const rem = b.status === 'confirmed' && !past ? (b.reminder_status ? REMINDER[b.reminder_status] : ['Lembrete ainda não enviado', 'off']) : null;
+    const rem = null; // lembretes por WhatsApp (botão na marcação)
     const A = []; // ações por estado
     if (depositDue(b)) A.push(`<button class="btn small secondary" data-act="deposit">${ic('euro')}Registar sinal (${euro(depositDue(b))})</button>`);
     if (b.status === 'pending') A.push(`<button class="btn small" data-act="approve">${ic('check')}Aprovar</button>`, '<button class="btn small secondary" data-act="suggest">Sugerir outro horário</button>', '<button class="btn small ghost-err" data-act="reject">Recusar</button>');
@@ -228,6 +228,7 @@
         ${b.cancel_reason && ['cancelled'].includes(b.status) ? `<dt>Motivo</dt><dd>${esc(b.cancel_reason)}</dd>` : ''}
       </dl>
       ${A.length ? `<div class="actions">${A.join('')}</div>` : ''}
+      ${waBlock(b)}
       <div class="field" style="margin-top:18px"><label for="b-notes">Notas internas <span class="muted small">(só tu vês — não registes dados de saúde)</span></label>
         <textarea class="input" id="b-notes" rows="3" maxlength="1000">${esc(b.internal_notes)}</textarea></div>
       <button class="btn tiny secondary" data-act="notes">Guardar notas</button>
@@ -236,7 +237,7 @@
           ${p.status === 'pago' ? `<button class="link-btn" data-void="${p.id}">Anular</button>` : `<span class="mini off">Anulado${p.void_reason ? ': ' + esc(p.void_reason) : ''}</span>`}</div>`).join('')}</div>` : ''}
       <details class="history"><summary>Histórico de alterações (${b.events.length})</summary>
         <ol class="timeline">${b.events.map(e => `<li><time>${dt(e.at)}</time><b>${esc(e.action)}</b>${e.details ? `<span>${esc(e.details)}</span>` : ''}<em>${esc(e.actor)}</em></li>`).join('') || '<li>Sem registos.</li>'}</ol>
-        ${b.notifications.length ? `<p class="small muted" style="margin:10px 0 4px">Mensagens:</p><ul class="notif">${b.notifications.map(n => `<li>${dt(n.created_at)} · ${esc(n.kind)} · <span class="mini ${{ sent: 'ok', failed: 'err', not_configured: 'warn', skipped: 'off' }[n.status] || ''}">${{ sent: 'Enviado', failed: 'Falhou', not_configured: 'Não enviado (email não configurado)', skipped: 'Não enviado (sem email)' }[n.status] || esc(n.status)}</span></li>`).join('')}</ul>` : ''}
+        
       </details>`, body => {
       const act = (k, fn) => { const el = $(`[data-act="${k}"]`, body); if (el) el.onclick = run(fn); };
       const done = async (msg, reopen = true) => { toast(msg); refresh(); if (reopen && dlg.open) openBooking(id, refresh); };
@@ -253,21 +254,34 @@
       act('cancel', async () => cancelDialog(id, refresh));
       act('notes', async () => { await api(`/bookings/${id}`, { method: 'PATCH', body: { internal_notes: $('#b-notes', body).value } }); toast('Notas guardadas'); });
       $$('[data-void]', body).forEach(x => x.onclick = () => voidDialog(+x.dataset.void, id, refresh));
+      $$('[data-wa]', body).forEach(a => a.addEventListener('click', () => { api(`/bookings/${id}/wa-log`, { method: 'POST', body: { kind: a.dataset.wa } }).then(() => setTimeout(() => dlg.open && openBooking(id, refresh), 800)).catch(() => {}); }));
     }, { side: true });
   }
 
+  // WhatsApp com um toque: abre o WhatsApp da Adriana com a mensagem já escrita (ela só carrega em Enviar)
+  function waBlock(b) {
+    if (!b.wa || !b.customer_phone || b.start_at < Date.now()) return '';
+    const sent = k => (b.events || []).some(e => e.action === 'WhatsApp aberto' && e.details === WA_L[k]);
+    const k = b.status === 'pending' && !b.proposed ? 'pending' : b.status === 'confirmed' ? 'confirmed' : null;
+    if (!k) return '';
+    const label = { pending: 'Pedido recebido', confirmed: 'Pedido confirmado' }[k], done = sent(k);
+    return `<div class="wa-box ${done ? '' : 'todo'}"><span class="wa-h">${ic('chat')}Enviar por WhatsApp</span>
+      <span class="small ${done ? 'muted' : ''}">${done ? `Mensagem "${label}" já enviada. Podes voltar a abri-la se precisares.` : `Avisa a cliente: mensagem <b>"${label}"</b>.`}</span>
+      <div class="wa-btns"><a class="btn tiny ${done ? 'secondary' : ''}" data-wa="${k}" href="${waHref(b.customer_phone)}?text=${encodeURIComponent(b.wa[k])}" target="_blank" rel="noopener">${ic('chat')}${label}${done ? ' ✓' : ''}</a></div></div>`;
+  }
+  const WA_L = { pending: 'pedido recebido', confirmed: 'pedido confirmado', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' };
   function cancelDialog(id, refresh) {
-    modal(`${head('Cancelar marcação')}<form id="cf"><div class="field"><label for="c-r">Motivo <span class="muted small">(opcional — aparece no email à cliente)</span></label><input class="input" id="c-r" maxlength="300"></div>
+    modal(`${head('Cancelar marcação')}<form id="cf"><div class="field"><label for="c-r">Motivo <span class="muted small">(opcional — fica no histórico)</span></label><input class="input" id="c-r" maxlength="300"></div>
       <p class="small muted">O horário fica livre de imediato para outras marcações.</p><div id="cf-msg"></div>
       <div class="actions"><button class="btn ghost-err" type="submit">Cancelar marcação</button><button class="btn secondary" type="button" data-close>Voltar</button></div></form>`, body => {
-      $('#cf', body).onsubmit = run(async e => { e.preventDefault(); await api(`/bookings/${id}`, { method: 'PATCH', body: { status: 'cancelled', reason: $('#c-r', body).value } }); toast('Marcação cancelada — horário libertado'); dlg.close(); refresh(); });
+      $('#cf', body).onsubmit = run(async e => { e.preventDefault(); await api(`/bookings/${id}`, { method: 'PATCH', body: { status: 'cancelled', reason: $('#c-r', body).value } }); toast('Marcação cancelada — horário libertado'); refresh(); openBooking(id, refresh); });
     });
   }
   function rejectDialog(id, refresh) {
-    modal(`${head('Recusar pedido')}<form id="rf"><div class="field"><label for="r-r">Motivo <span class="muted small">(opcional — enviado à cliente)</span></label><input class="input" id="r-r" maxlength="300" placeholder="Ex.: Não tenho disponibilidade nesse dia"></div>
+    modal(`${head('Recusar pedido')}<form id="rf"><div class="field"><label for="r-r">Motivo <span class="muted small">(opcional — fica no histórico)</span></label><input class="input" id="r-r" maxlength="300" placeholder="Ex.: Não tenho disponibilidade nesse dia"></div>
       <p class="small muted">Em alternativa, podes <b>sugerir outro horário</b> em vez de recusar.</p>
       <div class="actions"><button class="btn ghost-err" type="submit">Recusar pedido</button><button class="btn secondary" type="button" data-close>Voltar</button></div></form>`, body => {
-      $('#rf', body).onsubmit = run(async e => { e.preventDefault(); await api(`/bookings/${id}/reject`, { method: 'POST', body: { reason: $('#r-r', body).value } }); toast('Pedido recusado'); dlg.close(); refresh(); });
+      $('#rf', body).onsubmit = run(async e => { e.preventDefault(); await api(`/bookings/${id}/reject`, { method: 'POST', body: { reason: $('#r-r', body).value } }); toast('Pedido recusado'); refresh(); openBooking(id, refresh); });
     });
   }
   function voidDialog(pid, bid, refresh) {
@@ -350,7 +364,7 @@
           if (mode === 'move') { await api(`/bookings/${id}/move`, { method: 'POST', body: { start: pick.start, staff_id: pick.staff_id, notify: $('#s-n', body).checked } }); toast('Marcação reagendada'); }
           else {
             const r = await api(`/bookings/${id}/suggest`, { method: 'POST', body: { start: pick.start, staff_id: pick.staff_id, message: $('#s-m', body).value } });
-            toast(r.notified === 'sent' ? 'Sugestão enviada por email à cliente' : 'Horário reservado — contacta a cliente (email não enviado)', r.notified === 'sent' ? 'ok' : 'warn');
+            toast('Horário reservado — envia a proposta por WhatsApp');
           }
           refresh(); openBooking(id, refresh);
         } catch (e) { formMsg($('#s-msg', body), esc(e.message)); }
@@ -372,7 +386,7 @@
           <div class="field"><label for="n-st">Estado</label><select class="input" id="n-st"><option value="confirmed">Confirmada</option><option value="pending">Pendente (a confirmar com a cliente)</option></select></div>
         </div>
         <div class="field"><label for="n-notes">Notas internas <span class="muted small">(opcional)</span></label><textarea class="input" id="n-notes" rows="2" maxlength="1000"></textarea></div>
-        <label class="check"><input type="checkbox" id="n-notify"><span>Enviar confirmação por email à cliente (se tiver email e o email estiver configurado)</span></label>
+
         <div id="nf-msg"></div>
         <div class="actions"><button class="btn" type="submit">${ic('check')}Criar marcação</button><button class="btn secondary" type="button" data-close>Cancelar</button></div>
       </form>`, body => {
@@ -408,7 +422,7 @@
         if (!service_id) return formMsg(msg, 'Escolhe o serviço.');
         if (!pick) return formMsg(msg, 'Escolhe o dia e a hora.');
         const payload = { service_id, start: pick.start, staff_id: pick.staff_id || undefined, status: $('#n-st', body).value, channel: $('#n-ch', body).value,
-          internal_notes: $('#n-notes', body).value, notify: $('#n-notify', body).checked, force_new: !!force };
+          internal_notes: $('#n-notes', body).value, notify: false, force_new: !!force };
         if (customer) payload.customer_id = customer.id;
         else Object.assign(payload, { name: $('#n-name', body)?.value, phone: $('#n-phone', body)?.value, email: $('#n-email', body)?.value });
         try {
@@ -529,7 +543,6 @@
     setTop('Dashboard', `<button class="btn small" id="t-new">${ic('plus')}<span>Nova marcação</span></button>`);
     $('#view').innerHTML = `
       <div class="hello"><div><h2>${greeting()}, ${esc(first)}!</h2><p>Aqui está o resumo do teu negócio · <span class="muted">${longDay(d.today)}</span></p></div></div>
-      ${!d.integrations.email ? `<div class="notice warn slim">${ic('bell')}<span>O email ainda não está configurado: confirmações e lembretes <b>não são enviados</b> às clientes. <a href="#definicoes/lembretes">Ver o que falta</a></span></div>` : ''}
       ${!d.open_days && !d.weekly_hours ? `<div class="notice slim">${ic('calendar')}<span>Ainda não abriste horários para marcação. <a href="#calendario/disponibilidade">Abrir horários</a></span></div>` : ''}
       ${d.birthdays && d.birthdays.length ? `<div class="notice slim bday-note">${ic('gift')}<span>Hoje faz anos: <b>${d.birthdays.map(b => esc(b.name)).join(', ')}</b>. <a href="#clientes/aniversarios">Enviar mensagem</a></span></div>` : ''}
       <div class="kpis five">
@@ -797,12 +810,12 @@
       <form id="mvf"><p class="small" style="margin-top:0">De <b>${longDay(isoDay(b.start_at))} às ${hhmm(b.start_at)}</b> para:</p>
         <div class="form-grid"><div class="field"><label for="mv-d">Dia</label><input class="input" type="date" id="mv-d" value="${date}" min="${today()}" required></div>
           <div class="field"><label for="mv-t">Hora</label><input class="input" type="time" id="mv-t" step="300" value="${time}" required></div></div>
-        <label class="check"><input type="checkbox" id="mv-n" checked><span>Avisar a cliente por email (se tiver email e o email estiver configurado)</span></label>
+        <p class="small muted">Depois de reagendar, envia a nova data à cliente pelo botão WhatsApp da marcação.</p>
         <p class="small muted">O sistema verifica se o novo horário está livre e não bloqueado. O horário atual fica livre assim que confirmares.</p>
         <div id="mv-msg"></div><div class="actions"><button class="btn" type="submit">${ic('check')}Reagendar</button><button class="btn secondary" type="button" data-close>Cancelar</button></div></form>`, body => {
       $('#mvf', body).onsubmit = run(async e => {
         e.preventDefault();
-        try { await api(`/bookings/${b.id}/move`, { method: 'POST', body: { start: at($('#mv-d', body).value, $('#mv-t', body).value), notify: $('#mv-n', body).checked } }); toast('Marcação reagendada'); dlg.close(); route(); }
+        try { await api(`/bookings/${b.id}/move`, { method: 'POST', body: { start: at($('#mv-d', body).value, $('#mv-t', body).value), notify: false } }); toast('Marcação reagendada'); dlg.close(); route(); }
         catch (err) { formMsg($('#mv-msg', body), esc(err.message)); }
       });
     });
@@ -810,7 +823,7 @@
   AG.pedidos = async body => {
     const list = await api('/bookings?status=pending');
     if (!(typeof body !== 'undefined' ? body : $('#view')).isConnected) return;
-    body.innerHTML = `<p class="small muted">Pedidos feitos pelo site (e marcações que criaste como pendentes). Ao aprovar, o horário é verificado de novo e a cliente recebe a confirmação por email, se o email estiver configurado. Em vez de recusar, podes sugerir outro horário.</p>
+    body.innerHTML = `<p class="small muted">Pedidos feitos pelo site (e marcações que criaste como pendentes). Ao aprovar, o horário é verificado de novo; depois envia a confirmação à cliente pelo botão WhatsApp da marcação. Em vez de recusar, podes sugerir outro horário.</p>
       ${list.length ? `<div class="pend-grid">${list.map(pendingCard).join('')}</div>` : empty('Não há pedidos por confirmar.')}`;
     bindBookings(body, () => AG.pedidos(body));
   };
@@ -1057,7 +1070,7 @@
     const today = d.list.filter(c => c.days_until === 0), week = d.list.filter(c => c.days_until > 0 && c.days_until <= 7), month = d.list.filter(c => c.days_until > 7);
     const sec = (t, l, e) => `<section class="panel"><h2>${t} <small>${l.length}</small></h2>${l.length ? l.map(bdayRow).join('') : empty(e)}</section>`;
     $('#view').innerHTML = `${clTabs('aniversarios')}
-      <p class="small muted">A mensagem abre o WhatsApp (ou o email) já escrita com o nome da cliente — só tens de carregar em enviar. Só aparece para quem deu consentimento. ${d.email_auto && d.email_configured ? 'O email automático de aniversário está <b>ativo</b>.' : `O email automático ${d.email_auto ? 'está ativo, mas o email ainda não está configurado — nada é enviado sozinho' : 'está desligado'} (<a href="#clientes/formulario">configurar</a>).`}</p>
+      <p class="small muted">A mensagem abre o WhatsApp já escrita com o nome da cliente — só tens de carregar em enviar. Só aparece para quem deu consentimento.</p>
       ${sec('Hoje', today, 'Ninguém faz anos hoje.')}${sec('Próximos 7 dias', week, 'Sem aniversários nos próximos 7 dias.')}${sec('Até ao fim do próximo mês', month, 'Sem mais aniversários nos próximos 31 dias.')}`;
     bindBdays($('#view'), birthdaysView);
   }
@@ -1091,18 +1104,12 @@
             ${st.recent.length ? st.recent.map(c => `<a class="mini-row click" href="#clientes/${c.id}"><span><b>${esc(c.name)}</b> · ${esc(c.phone)}<br><span class="small muted">${esc(c.email)} · aniversário ${bdayTxt(c.birthday)}${c.birthday_consent ? '' : ' · sem consentimento'}</span></span><span class="small muted">${dmyMs(c.registered_at)}</span></a>`).join('') : empty('Ainda ninguém se registou pelo formulário.')}
           </section>
         </div>
-        <form class="panel" id="rg-f"><h2>Textos e mensagem</h2>
+        <form class="panel" id="rg-f"><h2>Textos do formulário</h2>
           <div class="field"><label for="rg-t">Título do formulário</label><input class="input" id="rg-t" value="${esc(s.register_title)}" maxlength="80"></div>
           <div class="field"><label for="rg-i">Texto de apresentação</label><textarea class="input" id="rg-i" rows="3" maxlength="400">${esc(s.register_intro)}</textarea></div>
-          <div class="field"><label for="rg-m">Mensagem de aniversário</label><textarea class="input" id="rg-m" rows="8" maxlength="800">${esc(s.birthday_message)}</textarea>
-            <span class="hint">{nome} = primeiro nome da cliente · {profissional} = ${esc(s.professional_name)}</span></div>
-          <div class="preview-msg"><span class="small muted">Pré-visualização</span><p id="rg-prev"></p></div>
-          <label class="check"><input type="checkbox" id="rg-auto" ${s.birthday_email_enabled ? 'checked' : ''}><span>Enviar também por email, automaticamente, no dia do aniversário (só a quem deu consentimento)</span></label>
-          <p class="small muted" style="margin-top:0">${integ.email.configured ? 'O email está configurado.' : 'O email ainda não está configurado: enquanto não estiver, nada é enviado sozinho — usa o botão WhatsApp em Aniversários.'}</p>
-          <button class="btn">Guardar</button></form>
+          <p class="small muted">A mensagem de aniversário edita-se em <a href="#definicoes/lembretes">Definições → Mensagens WhatsApp</a>.</p>
+<button class="btn">Guardar</button></form>
       </div>`;
-    const prev = () => { $('#rg-prev').textContent = $('#rg-m').value.replace(/\{nome\}/g, 'Ana').replace(/\{profissional\}/g, s.professional_name || ''); };
-    $('#rg-m').oninput = prev; prev();
     const drawQR = () => {
       const box = $('#rg-qr'); if (!box || typeof qrcode !== 'function') return;
       const q = qrcode(0, 'M'); q.addData(link()); q.make();
@@ -1121,7 +1128,7 @@
     };
     $('#rg-share')?.addEventListener('click', () => navigator.share({ title: s.register_title, text: s.register_intro, url: link() }).catch(() => {}));
     $('#rg-on').onchange = run(async e => { await api('/settings', { method: 'PUT', body: { register_enabled: e.target.checked } }); toast(e.target.checked ? 'Formulário ativo' : 'Formulário desligado — o link mostra uma mensagem de indisponível'); registerView(); });
-    $('#rg-f').onsubmit = run(async e => { e.preventDefault(); await api('/settings', { method: 'PUT', body: { register_title: $('#rg-t').value, register_intro: $('#rg-i').value, birthday_message: $('#rg-m').value, birthday_email_enabled: $('#rg-auto').checked } }); toast('Guardado'); });
+    $('#rg-f').onsubmit = run(async e => { e.preventDefault(); await api('/settings', { method: 'PUT', body: { register_title: $('#rg-t').value, register_intro: $('#rg-i').value } }); toast('Guardado'); });
   }
 
   // ---------- SERVIÇOS ----------
@@ -1350,7 +1357,7 @@
   const readHours = root => $$('[data-wd]', root).flatMap(r => $$('.int', r).map(i => { const [a, b] = $$('input', i); return { weekday: +r.dataset.wd, start: a.value, end: b.value }; }));
 
   // ---------- DEFINIÇÕES ----------
-  const DEF_TABS = [['espaco', 'Negócio e contactos'], ['horario', 'Horário de funcionamento'], ['regras', 'Regras e políticas'], ['pagamentos', 'Pagamentos e sinal'], ['lembretes', 'Notificações e lembretes'],
+  const DEF_TABS = [['espaco', 'Negócio e contactos'], ['horario', 'Horário de funcionamento'], ['regras', 'Regras e políticas'], ['pagamentos', 'Pagamentos e sinal'], ['lembretes', 'Mensagens WhatsApp'],
     ['conteudo', 'Textos e fotografias do site'], ['equipa', 'Profissionais'], ['dados', 'Dados das clientes (RGPD)'], ['conta', 'Conta e acesso']];
   views.definicoes = async tab => {
     if (tab === 'disponibilidade' || tab === 'bloqueios') return location.replace('#calendario/' + tab);
@@ -1384,27 +1391,35 @@
         const st = await api('/integrations');
     if (!(typeof body !== 'undefined' ? body : $('#view')).isConnected) return;
         const E = st.email;
-        body.innerHTML = `<section class="panel"><h2>Estado das mensagens</h2>
-          <div class="int-grid">
-            <div class="int-card ${E.configured ? 'ok' : 'warn'}"><b>${ic('mail')}Email</b><span class="st ${E.configured ? 'st-ok' : 'st-warn'}">${E.configured ? 'Configurado' : 'Não configurado'}</span>
-              <p class="small">${E.configured ? `Envio a partir de ${esc(E.from)} (porta ${E.port}).` : `Nada é enviado às clientes. Falta definir no servidor: <b>${E.missing.join(', ')}</b>${E.auth ? '' : ' (e normalmente SMTP_USER e SMTP_PASS)'}. Ver instruções no README.`}</p></div>
-            <div class="int-card off"><b>${ic('chat')}WhatsApp</b><span class="st st-off">Não incluído</span><p class="small">${esc(st.whatsapp.note)}</p></div>
-            <div class="int-card off"><b>${ic('phone')}SMS</b><span class="st st-off">Não incluído</span><p class="small">${esc(st.sms.note)}</p></div>
-          </div>
-          <p class="small muted">Últimos 30 dias: ${['sent', 'not_configured', 'failed', 'skipped'].map(k => `${{ sent: 'enviadas', not_configured: 'não enviadas (sem configuração)', failed: 'falharam', skipped: 'sem email da cliente' }[k]}: <b>${st.last30[k] || 0}</b>`).join(' · ')}.
-            ${st.jobs ? '' : '<br><b>Tarefas automáticas desligadas (JOBS=off):</b> os lembretes não são processados.'}</p></section>
-          <form id="sf" class="panel"><h2>Lembretes</h2>
-            <label class="check"><input type="checkbox" name="reminder_enabled" ${s.reminder_enabled ? 'checked' : ''}><span>Enviar lembrete por email antes da marcação, com link para a cliente <b>confirmar a presença</b></span></label>
-            <div class="field" style="max-width:320px"><label for="s-reminder_hours">Enviar quantas horas antes</label><input class="input" id="s-reminder_hours" name="reminder_hours" type="number" min="1" max="168" value="${s.reminder_hours}"><span class="hint">24 = na véspera, à mesma hora da marcação.</span></div>
-            ${E.configured ? '' : '<div class="notice warn">Enquanto o email não estiver configurado, os lembretes ficam registados como <b>“não enviado”</b> — nenhuma mensagem é simulada. Podes confirmar a presença por telefone e registá-la na marcação (“Confirmou presença”).</div>'}
-            <button class="btn" style="margin-top:14px">Guardar</button></form>
-          <section class="panel"><h2>Próximas marcações — lembretes e presença</h2><div id="rem-list"><div class="spinner"></div></div></section>`;
+        body.innerHTML = `<section class="panel"><h2>${ic('chat')} Mensagens por WhatsApp</h2>
+            <p class="small muted" style="margin:0">As mensagens às clientes saem do teu WhatsApp, com um toque: em cada marcação, o botão <b>Enviar por WhatsApp</b> abre a conversa com o texto já escrito (com o link da marcação e os dados do sinal) e só tens de carregar em Enviar.
+            Cada mensagem aberta fica registada no histórico da marcação.</p></section>
+          <form id="waf" class="panel"><h2>Mensagens de WhatsApp</h2>
+            <p class="small muted">Cada mensagem abre o teu WhatsApp já escrita — só tens de carregar em Enviar.</p>
+            <div class="wa-tpl"><div class="field"><label for="w-p">1 · Pedido recebido</label><span class="hint">Botão na marcação, enquanto o pedido está pendente. Leva os dados do sinal e o link da marcação.</span><textarea class="input" id="w-p" name="wa_tpl_pending" rows="7">${esc(s.wa_tpl_pending)}</textarea></div>
+              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-p"></p></div></div>
+            <div class="wa-tpl"><div class="field"><label for="w-c">2 · Pedido confirmado</label><span class="hint">Botão na marcação, depois de aprovares o pedido.</span><textarea class="input" id="w-c" name="wa_tpl_confirmed" rows="7">${esc(s.wa_tpl_confirmed)}</textarea></div>
+              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-c"></p></div></div>
+            <div class="wa-tpl"><div class="field"><label for="w-b">3 · Mensagem de aniversário</label><span class="hint">Botão em Clientes → Aniversários e no Dashboard, no dia de anos da cliente.</span><textarea class="input" id="w-b" name="birthday_message" rows="9" maxlength="800">${esc(s.birthday_message)}</textarea></div>
+              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-b"></p></div></div>
+            <p class="small muted">Podes usar: <code>{nome}</code> primeiro nome · <code>{profissional}</code> o teu nome · nas mensagens 1 e 2 também <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{sinal_texto}</code> (instruções do sinal) <code>{ref}</code> <code>{link}</code> (link da marcação) <code>{morada}</code>.</p>
+            <button class="btn">Guardar mensagens</button></form>
+          <section class="panel"><h2>Próximas marcações — presença</h2><div id="rem-list"><div class="spinner"></div></div></section>`;
         const list = await api(`/bookings?status=confirmed&from=${today()}&to=${addDays(today(), 7)}`);
         if (!$('#rem-list')) return;
         $('#rem-list').innerHTML = list.length ? list.map(b => `<div class="mini-row click" data-booking="${b.id}" tabindex="0" role="button"><span><b>${shortDay(isoDay(b.start_at))} ${hhmm(b.start_at)}</b> · ${esc(b.customer_name)} · ${esc(b.service_name)}</span>
-            <span class="row-actions">${b.reminder_status ? `<span class="mini ${REMINDER[b.reminder_status][1]}">${REMINDER[b.reminder_status][0]}</span>` : '<span class="mini off">Lembrete por enviar</span>'}${b.attendance_confirmed_at ? '<span class="mini ok">Presença confirmada</span>' : '<span class="mini">Presença por confirmar</span>'}</span></div>`).join('') : empty('Sem marcações confirmadas nos próximos 7 dias.');
+            <span class="row-actions">${b.attendance_confirmed_at ? '<span class="mini ok">Presença confirmada</span>' : '<span class="mini">Presença por confirmar</span>'}<span class="mini off">Abrir para enviar por WhatsApp</span></span></div>`).join('') : empty('Sem marcações confirmadas nos próximos 7 dias.');
         bindBookings(body, () => views.definicoes('lembretes'));
         bindSettings();
+        $('#waf', body).onsubmit = run(async e => {
+          e.preventDefault();
+          const out = Object.fromEntries([...$('#waf', body).elements].filter(x => x.name).map(x => [x.name, x.value]));
+          await api('/settings', { method: 'PUT', body: out }); Object.assign(s, out); toast('Mensagens guardadas');
+        });
+        const EX = { nome: 'Ana', profissional: s.professional_name || s.business_name, servico: 'Verniz Gel', data: 'sábado, 17 de outubro', hora: '10:00', ref: 'AB12CD', link: (s.public_base_url || '') + '/gerir.html?t=…',
+          morada: `${s.address_line}, ${s.postal_code} ${s.city}`, sinal: '9,00 €', sinal_texto: `Para reservar, peço um sinal de 9,00 € por MB WAY para o ${s.mbway_number}, com a referência AB12CD na descrição. Assim que receber, confirmo a tua marcação.` };
+        const fillEx = t => t.replace(/\{(\w+)\}/g, (m, k) => k in EX ? EX[k] : m).replace(/\n{3,}/g, '\n\n').trim();
+        $$('[data-prev]', body).forEach(p => { const ta = $('#' + p.dataset.prev, body); const up = () => { p.textContent = fillEx(ta.value); }; ta.addEventListener('input', up); up(); });
       },
       pagamentos: async () => {
         body.innerHTML = `<form id="sf" class="panel"><h2>Pagamentos e sinal</h2>
@@ -1413,7 +1428,7 @@
           <label class="check"><input type="checkbox" name="deposit_enabled" ${s.deposit_enabled ? 'checked' : ''}><span>Pedir sinal para reservar o dia e a hora</span></label>
           <div class="form-grid" style="margin-top:12px">
             ${inp('deposit_percent', 'Sinal (% do valor do serviço)', { type: 'number', min: 10, hint: '50 = metade agora, metade no final do serviço.' })}
-            ${inp('mbway_number', 'Número MB WAY', { hint: 'Mostrado à cliente depois de marcar e no email.' })}
+            ${inp('mbway_number', 'Número MB WAY', { hint: 'Mostrado à cliente depois de marcar e nas mensagens de WhatsApp.' })}
             ${inp('iban', 'IBAN (opcional)', { hint: 'Ex.: PT50 0000 0000 0000 0000 0000 0. Vazio = sem opção de transferência.' })}
             ${inp('iban_name', 'Titular da conta (opcional)')}
             ${inp('payment_note', 'Nota para a cliente', { full: true, area: true, rows: 2 })}
@@ -1435,14 +1450,14 @@
         body.innerHTML = `<form id="sf" class="panel"><h2>Negócio e contactos</h2><div class="form-grid">
           ${inp('business_name', 'Nome do estabelecimento')}${inp('professional_name', 'Nome da profissional')}
           ${imgField('logo_image', 'Logótipo (site e painel)', s.logo_image)}${imgField('profile_image', 'Fotografia de perfil (painel)', s.profile_image)}
-          ${inp('phone', 'Telefone')}${inp('email', 'Email (recebe avisos de novas marcações)')}
+          ${inp('phone', 'Telefone')}${inp('email', 'Email (aparece no site)')}
           ${inp('whatsapp', 'WhatsApp', { hint: 'O número de telemóvel. Cria o botão "WhatsApp" no site.' })}${inp('instagram', 'Instagram (link ou @utilizador)')}
           ${inp('facebook', 'Facebook (link, opcional)')}${inp('tiktok', 'TikTok (link, opcional)')}
           ${inp('address_line', 'Morada')}${inp('postal_code', 'Código postal')}${inp('city', 'Localidade')}
           ${inp('map_link_url', 'Link do mapa (opcional)', { hint: 'Vazio = "Como chegar" abre o Google Maps com a morada.' })}
           ${inp('access_info', 'Estacionamento e acesso (opcional)', { full: true, area: true, rows: 2 })}
           ${inp('privacy_controller', 'Responsável pelo tratamento de dados (nome/empresa e NIF)', { full: true })}
-          ${inp('public_base_url', 'Endereço público do site', { hint: 'Usado nos links dos emails, ex.: https://www.oteusite.pt' })}
+          ${inp('public_base_url', 'Endereço público do site', { hint: 'Usado nos links enviados por WhatsApp, ex.: https://www.oteusite.pt' })}
         </div><button class="btn">Guardar</button></form>`;
         bindImgFields(body); bindSettings(() => paintSide());
       },
@@ -1566,13 +1581,13 @@
     : /Aceitou/.test(a) ? ['check', 'Aceitou o horário sugerido', 'ok'] : /Recusou/.test(a) ? ['x', 'Recusou o horário sugerido', 'cancel'] : /Presença/.test(a) ? ['check', 'Confirmou presença', 'ok'] : /expirou/.test(a) ? ['bell', 'Pedido expirou sem resposta', 'warn'] : ['bell', a, ''];
   const EMAIL_KIND = { confirmed: 'Confirmação', pending: 'Pedido recebido', approved: 'Pedido aprovado', rejected: 'Pedido recusado', cancelled: 'Cancelamento', rescheduled: 'Reagendamento', reminder: 'Lembrete', proposed: 'Proposta de horário', expired: 'Pedido expirado', review: 'Convite para avaliar', waitlist_offer: 'Vaga da lista de espera', birthday: 'Aniversário', admin_new: 'Aviso de nova marcação' };
   views.notificacoes = async arg => {
-    nt.tab = ['atividade', 'amanha', 'emails'].includes(arg) ? arg : 'atividade';
+    nt.tab = ['atividade', 'amanha'].includes(arg) ? arg : 'atividade';
     setTop('Notificações', '');
     const my = seq;
     const d = await api('/inbox');
     if (stale(my)) return;
     const s = cache.settings || {};
-    const T = [['atividade', 'Atividade', d.unread], ['amanha', 'Amanhã', d.tomorrow.length], ['emails', 'Emails às clientes', 0]];
+    const T = [['atividade', 'Atividade', d.unread], ['amanha', 'Amanhã', d.tomorrow.length]];
     const remind = b => `Olá ${String(b.customer_name).split(' ')[0]}! Lembro-te da tua marcação amanhã, ${shortDay(isoDay(b.start_at))}, às ${hhmm(b.start_at)} (${b.service_name}). Até amanhã! ${s.professional_name || ''}`.trim();
     $('#view').innerHTML = `<div class="tabs" role="tablist">${T.map(([k, l, n]) => `<a role="tab" href="#notificacoes${k === 'atividade' ? '' : '/' + k}" aria-selected="${nt.tab === k}">${l}${n ? `<span class="badge">${n}</span>` : ''}</a>`).join('')}</div>
       ${d.pending ? `<a class="notice warn slim" href="#marcacoes/pedidos">${ic('bell')}<span><b>${d.pending} pedido(s) pendente(s)</b> a aguardar a tua aprovação →</span></a>` : ''}
@@ -1586,10 +1601,10 @@
       bindBookings(body, () => views.notificacoes('atividade'));
       if (d.unread) api('/inbox/seen', { method: 'POST', body: {} }).then(updateBadges).catch(() => {});
     } else if (nt.tab === 'amanha') {
-      body.innerHTML = `<p class="small muted">Marcações confirmadas para ${longDay(d.tomorrow_date)}. ${d.integrations.email ? 'Os lembretes automáticos por email seguem conforme as definições.' : 'O email não está configurado: podes lembrar cada cliente por WhatsApp, com a mensagem já escrita.'} <a href="#definicoes/lembretes">Definições de lembretes</a></p>
+      body.innerHTML = `<p class="small muted">Marcações confirmadas para ${longDay(d.tomorrow_date)}. <a href="#definicoes/lembretes">Editar mensagens</a></p>
         ${d.tomorrow.length ? d.tomorrow.map(b => `<div class="mini-row click" data-booking="${b.id}" tabindex="0" role="button"><span><b>${hhmm(b.start_at)}</b> · ${esc(b.customer_name)} · ${esc(b.service_name)}<br>
           <span class="small">${b.reminder_status ? `<span class="mini ${REMINDER[b.reminder_status][1]}">${REMINDER[b.reminder_status][0]}</span>` : '<span class="mini off">Lembrete por enviar</span>'} ${b.attendance_confirmed_at ? '<span class="mini ok">Presença confirmada</span>' : ''}</span></span>
-          <span class="row-actions"><a class="btn tiny" href="${waHref(b.customer_phone)}?text=${encodeURIComponent(remind(b))}" target="_blank" rel="noopener">${ic('chat')}Lembrar por WhatsApp</a></span></div>`).join('') : empty('Sem marcações confirmadas para amanhã.')}`;
+          <span class="row-actions"><span class="mini off">Abrir a marcação</span></span></div>`).join('') : empty('Sem marcações confirmadas para amanhã.')}`;
       bindBookings(body, () => views.notificacoes('amanha'));
     } else {
       const ST = { sent: ['Enviado', 'ok'], failed: ['Falhou', 'err'], not_configured: ['Não enviado — email não configurado', 'warn'], skipped: ['Não enviado — cliente sem email', 'off'] };

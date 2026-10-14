@@ -130,7 +130,7 @@
   async function oferta() {
     let o;
     try { o = await api(`/offer/${T}`); } catch (e) { return fail(e.message); }
-    if (!o.valid) return fail(o.status === 'booked' ? 'Já reservaste esta vaga. Consulta o email de confirmação.' : 'O prazo desta oferta terminou e a vaga foi libertada.');
+    if (!o.valid) return fail(o.status === 'booked' ? 'Já reservaste esta vaga. Consulta a mensagem de confirmação.' : 'O prazo desta oferta terminou e a vaga foi libertada.');
     app().innerHTML = `<h1 style="font-size:clamp(2rem,5vw,2.8rem)">Surgiu uma vaga para ti</h1>
       <div class="review-box"><dl><dt>Serviço</dt><dd>${esc(o.service_name)}</dd><dt>Data</dt><dd>${fmt.dateTime(o.start)}</dd>
         <dt>Preço</dt><dd>${fmt.price(o.price_cents, o.price_type)}</dd></dl></div>
@@ -153,7 +153,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    if (!token) return fail('Este link está incompleto. Usa o link que recebeste por email.');
+    if (!token) return fail('Este link está incompleto. Usa o link que recebeste por WhatsApp.');
     ({ gerir, avaliar, oferta })[document.body.dataset.page]?.().catch(e => fail(e.message));
   });
 })();

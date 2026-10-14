@@ -233,8 +233,8 @@ const DEFAULT_SETTINGS = {
   timezone: 'Europe/Lisbon',  // fuso horário do espaço (Portugal continental e Madeira; Açores: Atlantic/Azores)
   slot_step_min: 60, buffer_min: 0, min_notice_hours: 24, max_advance_days: 60,
   cancel_limit_hours: 48, reschedule_limit_hours: 48,
-  booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e recebes a resposta por email. Se precisar de propor outro horário, também te aviso por email e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
-  cancellation_policy: 'Os cancelamentos e reagendamentos têm de ser feitos com pelo menos 48 horas de antecedência em relação à hora marcada. Podes fazê-lo através do link que recebes no email de confirmação, ou contactando-me diretamente.\n\nA menos de 48 horas da marcação já não é possível cancelar nem reagendar pelo site. Nesse caso, contacta-me o mais cedo possível por telefone.\n\nSe cancelares com pelo menos 48 horas de antecedência, devolvo o sinal ou guardo-o para uma nova marcação, como preferires. A menos de 48 horas, ou em caso de falta, o sinal não é devolvido.\n\nFaltar sem avisar impede outra cliente de usar esse horário. Em caso de faltas repetidas sem aviso, posso deixar de aceitar marcações online.',
+  booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e envio-te a resposta por WhatsApp. Se precisar de propor outro horário, também te aviso por WhatsApp e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
+  cancellation_policy: 'Os cancelamentos e reagendamentos têm de ser feitos com pelo menos 48 horas de antecedência em relação à hora marcada. Podes fazê-lo através do link da tua marcação (que também te envio por WhatsApp), ou contactando-me diretamente.\n\nA menos de 48 horas da marcação já não é possível cancelar nem reagendar pelo site. Nesse caso, contacta-me o mais cedo possível por telefone.\n\nSe cancelares com pelo menos 48 horas de antecedência, devolvo o sinal ou guardo-o para uma nova marcação, como preferires. A menos de 48 horas, ou em caso de falta, o sinal não é devolvido.\n\nFaltar sem avisar impede outra cliente de usar esse horário. Em caso de faltas repetidas sem aviso, posso deixar de aceitar marcações online.',
   pending_hold_hours: 24, waitlist_offer_minutes: 120, waitlist_max_offers: 3,
   reminder_enabled: true, reminder_hours: 24, review_invite_delay_hours: 2,
   // formulário de registo (link partilhado nas redes sociais) e mensagens de aniversário
@@ -247,11 +247,18 @@ const DEFAULT_SETTINGS = {
   deposit_enabled: true, deposit_percent: 50,
   mbway_number: '939 907 962', iban: '', iban_name: '',
   payment_note: 'Os restantes 50% são pagos no final do serviço.',
+  // mensagens de WhatsApp com um toque (o painel abre o WhatsApp da Adriana com o texto já escrito)
+  wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pelo teu pedido de marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar o teu pedido aqui: {link}\n\nUm beijinho,\n{profissional}',
+  wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
+  wa_tpl_proposed: 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}',
+  wa_tpl_cancelled: 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}',
+  wa_tpl_review: 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}',
+  wa_tpl_reminder: 'Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}',
   arrival_note: 'Chega 5 minutos antes. Se tiveres alguma dúvida sobre a preparação, contacta-me antes da visita.',
   faq: [
-    { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome, email e telefone. Confirmo a marcação no prazo máximo de 24 horas e recebes a confirmação por email, com um link para gerires a marcação.' },
-    { q: 'Posso cancelar ou reagendar?', a: 'Sim, até 48 horas antes da hora marcada, pelo link privado que recebes no email de confirmação. A menos de 48 horas, contacta-me diretamente por telefone.' },
-    { q: 'O que significa "Pedido pendente de confirmação"?', a: 'Todas as marcações são confirmadas por mim. O horário fica reservado para ti e respondo no prazo máximo de 24 horas; recebes um email assim que o pedido for aceite ou se precisar de propor outro horário.' },
+    { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome e telemóvel. Confirmo a marcação no prazo máximo de 24 horas e envio-te a confirmação por WhatsApp, com um link para gerires a marcação.' },
+    { q: 'Posso cancelar ou reagendar?', a: 'Sim, até 48 horas antes da hora marcada, pelo link privado da tua marcação (que também te envio por WhatsApp). A menos de 48 horas, contacta-me diretamente por telefone.' },
+    { q: 'O que significa "Pedido pendente de confirmação"?', a: 'Todas as marcações são confirmadas por mim. O horário fica reservado para ti e respondo no prazo máximo de 24 horas; envio-te uma mensagem por WhatsApp assim que o pedido for aceite ou se precisar de propor outro horário.' },
     { q: 'Como me preparo para a visita?', a: 'Chega com alguns minutos de antecedência. Se o serviço exigir algum cuidado prévio, indico na descrição do serviço ou entro em contacto contigo.' },
     { q: 'E se o horário que quero estiver ocupado?', a: 'Aparecem as alternativas mais próximas e podes entrar na lista de espera. Se surgir uma vaga compatível, envio-te um aviso com prazo para reservares.' }
   ],
@@ -267,10 +274,20 @@ const DEFAULT_SETTINGS = {
     birthday_message: 'Olá {nome}! Muitos parabéns! Desejo-te um dia muito especial, cheio de coisas boas. Um beijinho, {profissional}',
     booking_policy: DEFAULT_SETTINGS.booking_policy.replace(/Para reservar o dia e a hora[^\n]*\n\n/, ''),
     cancellation_policy: DEFAULT_SETTINGS.cancellation_policy.replace(/Se cancelares com pelo menos 48 horas[^\n]*\n\n/, ''),
-    payment_note: 'Indica a referência da marcação na descrição do pagamento. Os restantes 50% são pagos no final do serviço.'
+    payment_note: 'Indica a referência da marcação na descrição do pagamento. Os restantes 50% são pagos no final do serviço.',
+    wa_tpl_pending: 'Olá {nome}! Recebi o teu pedido de marcação para {servico}, {data} às {hora}. 😊\n\n{sinal_texto}\n\nPodes ver o teu pedido aqui: {link}\n\n{profissional}',
+    wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada: {servico}, {data} às {hora}. 🤍\n\nMorada: {morada}\n\nSe precisares de alterar, usa este link (até 48 horas antes): {link}\n\nAté breve!\n{profissional}'
   };
   const del = db.prepare('DELETE FROM settings WHERE key=? AND value=?');
   for (const [k, v] of Object.entries(OLD)) del.run(k, JSON.stringify(v));
+}
+
+// contacto por WhatsApp em vez de email (outubro 2026): textos antigos guardados sem alterações passam aos novos
+{
+  const BACK = [["Confirmo todas as marcações no prazo máximo de 24 horas e envio-te a resposta por WhatsApp. Se precisar de propor outro horário, também te aviso por WhatsApp e podes aceitar ou recusar a proposta.", "Confirmo todas as marcações no prazo máximo de 24 horas e recebes a resposta por email. Se precisar de propor outro horário, também te aviso por email e podes aceitar ou recusar a proposta."], ["Podes fazê-lo através do link da tua marcação (que também te envio por WhatsApp), ou contactando-me diretamente.", "Podes fazê-lo através do link que recebes no email de confirmação, ou contactando-me diretamente."], ["envia o pedido com o teu nome e telemóvel. Confirmo a marcação no prazo máximo de 24 horas e envio-te a confirmação por WhatsApp, com um link para gerires a marcação.", "envia o pedido com o teu nome, email e telefone. Confirmo a marcação no prazo máximo de 24 horas e recebes a confirmação por email, com um link para gerires a marcação."], ["pelo link privado da tua marcação (que também te envio por WhatsApp).", "pelo link privado que recebes no email de confirmação."], ["envio-te uma mensagem por WhatsApp assim que o pedido for aceite ou se precisar de propor outro horário.", "recebes um email assim que o pedido for aceite ou se precisar de propor outro horário."]];
+  const old = v => BACK.reduce((t, [n, o]) => t.split(n).join(o), v);
+  const del = db.prepare('DELETE FROM settings WHERE key=? AND value=?');
+  for (const k of ['booking_policy', 'cancellation_policy', 'faq']) del.run(k, JSON.stringify(k === 'faq' ? DEFAULT_SETTINGS.faq.map(f => ({ q: f.q, a: old(f.a) })) : old(DEFAULT_SETTINGS[k])));
 }
 
 function getSettings() {

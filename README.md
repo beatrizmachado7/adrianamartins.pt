@@ -178,3 +178,14 @@ O Netlify só serve páginas fixas; as marcações, o painel e a base de dados p
 Enquanto o Render não estiver ligado, o site abre na mesma: textos, contactos, serviços e preços vêm de `public/assets/offline.json`. A página Marcações mostra "Marcações online em breve" com botões para WhatsApp e telefone, e o painel avisa que ainda não está ligado. Quando o Render estiver publicado, tudo passa a funcionar sozinho (sem mudar nada no Netlify).
 
 Se mudares serviços, preços ou textos no código antes de ligar o Render, atualiza o ficheiro com `npm run snapshot` e faz commit.
+
+## Comunicação só por WhatsApp (decisão de outubro 2026)
+
+O site não pede email às clientes (só nome e telemóvel) e não envia emails. O envio de email continua no código, desligado; para o ativar no futuro, basta preencher `SMTP_*` no Render.
+
+- No fim da marcação, a cliente carrega em **Enviar por WhatsApp** e envia à Adriana o pedido já escrito (referência, serviço, data e forma de pagamento). É assim que a Adriana fica a saber de cada novo pedido, além do contador no painel.
+- A cliente é reconhecida nas marcações seguintes pelo telemóvel.
+
+## WhatsApp com um toque
+
+Em cada marcação o painel mostra "Enviar por WhatsApp": abre o WhatsApp da Adriana com a mensagem já escrita — pedido recebido + sinal, proposta de outro horário, confirmação, lembrete, cancelamento e pedido de avaliação (com o link). A mensagem que falta enviar fica destacada a verde e cada envio fica no histórico. Os textos editam-se em Definições → Mensagens WhatsApp. Não há envio automático por WhatsApp (isso exigiria a API paga da Meta).
