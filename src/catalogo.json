@@ -1,0 +1,309 @@
+{
+  "nota": "Catálogo real enviado pela Beatriz (tabelas de preços 2026). Durações são estimativas a confirmar no painel.",
+  "categorias": [
+    {
+      "name": "Manicure",
+      "description": "[Descrição curta da manicure.]",
+      "note": "*Após 4 semanas será cobrado o valor da primeira aplicação.",
+      "services": [
+        {
+          "group": "Gel",
+          "name": "Primeira Aplicação (c/ extensão)",
+          "price": 3600,
+          "dur": 120,
+          "featured": 0
+        },
+        {
+          "group": "Gel",
+          "name": "Primeira Aplicação (sobre unha natural)",
+          "price": 3100,
+          "dur": 90,
+          "featured": 1
+        },
+        {
+          "group": "Gel",
+          "name": "Manutenção",
+          "price": 2300,
+          "dur": 75
+        },
+        {
+          "group": "Gel",
+          "name": "Manutenção (unhas L, XL)",
+          "price": 2600,
+          "dur": 90
+        },
+        {
+          "group": "Gel",
+          "name": "Manutenção (outra técnica)",
+          "price": 3100,
+          "dur": 90
+        },
+        {
+          "group": "Extras",
+          "name": "Nail Art - Elaborada",
+          "price": 500,
+          "type": "addon",
+          "bookable": 0
+        },
+        {
+          "group": "Extras",
+          "name": "Nail Art - Simples",
+          "price": 150,
+          "type": "addon",
+          "bookable": 0
+        },
+        {
+          "group": "Extras",
+          "name": "Efeito pós e purpurinas",
+          "price": 300,
+          "type": "addon",
+          "bookable": 0
+        },
+        {
+          "group": "Extras",
+          "name": "Mudança de formato",
+          "price": 500,
+          "type": "addon",
+          "bookable": 0
+        },
+        {
+          "group": "Extras",
+          "name": "Reconstrução de unha",
+          "price": 300,
+          "bookable": 0
+        },
+        {
+          "group": "Extras",
+          "name": "Falta três ou mais unhas",
+          "price": 3100,
+          "bookable": 0
+        },
+        {
+          "group": "Extras",
+          "name": "Remoção (Gel e Verniz Gel)",
+          "price": 1100,
+          "dur": 30
+        },
+        {
+          "group": "",
+          "name": "Verniz Gel",
+          "price": 1800,
+          "dur": 45
+        },
+        {
+          "group": "",
+          "name": "Manicure Tradicional",
+          "price": 1100,
+          "dur": 30
+        }
+      ]
+    },
+    {
+      "name": "Pedicure",
+      "description": "[Descrição curta da pedicure.]",
+      "note": "*Tabela de preços em vigor de Janeiro a Dezembro de 2026.",
+      "services": [
+        {
+          "group": "",
+          "name": "Moderna",
+          "price": 2300,
+          "dur": 60,
+          "featured": 1,
+          "desc": "Meias emolientes (tea tree, melaleuca e queratina) / Remoção de cutículas e calosidades / Verniz normal"
+        },
+        {
+          "group": "",
+          "name": "Moderna com Verniz Gel",
+          "price": 2800,
+          "dur": 75,
+          "desc": "Meias emolientes (tea tree, melaleuca e queratina) / Remoção de cutículas e calosidades / Verniz gel"
+        },
+        {
+          "group": "",
+          "name": "Verniz Gel",
+          "price": 1800,
+          "dur": 45,
+          "desc": "Limagem / Remoção de cutículas"
+        },
+        {
+          "group": "",
+          "name": "Simples",
+          "price": 1300,
+          "dur": 40,
+          "desc": "Limagem / Remoção de cutículas / Verniz normal"
+        },
+        {
+          "group": "",
+          "name": "Remoção Verniz Gel",
+          "price": 1100,
+          "dur": 20
+        }
+      ]
+    },
+    {
+      "name": "Lash Lifting",
+      "description": "[Descrição curta do lash lifting.]",
+      "note": "",
+      "services": [
+        {
+          "group": "",
+          "name": "Lash Lifting",
+          "price": 2000,
+          "dur": 60,
+          "featured": 1,
+          "desc": "[Descrição curta.]"
+        }
+      ]
+    },
+    {
+      "name": "Depilação a Laser",
+      "description": "[Descrição curta da depilação a laser.]",
+      "note": "*Tabela de preços em vigor de Janeiro a Dezembro de 2026.",
+      "services": [
+        {
+          "group": "Packs",
+          "name": "Corpo Todo",
+          "price": 5900,
+          "dur": 60,
+          "featured": 1
+        },
+        {
+          "group": "Packs",
+          "name": "3 Zonas",
+          "price": 4800,
+          "dur": 45
+        },
+        {
+          "group": "Packs",
+          "name": "2 Zonas",
+          "price": 3800,
+          "dur": 30
+        },
+        {
+          "group": "Zonas individuais",
+          "name": "Buço/Queixo",
+          "price": 2200,
+          "dur": 15
+        },
+        {
+          "group": "Zonas individuais",
+          "name": "Axilas",
+          "price": 2200,
+          "dur": 15
+        },
+        {
+          "group": "Zonas individuais",
+          "name": "Virilha Bikini",
+          "price": 2200,
+          "dur": 15
+        },
+        {
+          "group": "Zonas individuais",
+          "name": "Virilha Completa",
+          "price": 3300,
+          "dur": 20
+        },
+        {
+          "group": "Zonas individuais",
+          "name": "Meia Perna",
+          "price": 2200,
+          "dur": 20
+        },
+        {
+          "group": "Zonas individuais",
+          "name": "Perna Completa",
+          "price": 3300,
+          "dur": 30
+        }
+      ]
+    },
+    {
+      "name": "Depilação a Cera",
+      "description": "[Descrição curta da depilação a cera.]",
+      "note": "*Tabela de preços em vigor de Janeiro a Dezembro de 2026.",
+      "services": [
+        {
+          "group": "",
+          "name": "Buço",
+          "price": 450,
+          "dur": 10,
+          "featured": 0
+        },
+        {
+          "group": "",
+          "name": "Sobrancelhas",
+          "price": 750,
+          "dur": 15,
+          "featured": 0
+        },
+        {
+          "group": "",
+          "name": "Queixo",
+          "price": 450,
+          "dur": 10,
+          "featured": 0
+        },
+        {
+          "group": "",
+          "name": "Axilas",
+          "price": 600,
+          "dur": 15,
+          "featured": 0
+        },
+        {
+          "group": "",
+          "name": "Perna Completa",
+          "price": 1500,
+          "dur": 40,
+          "featured": 0
+        },
+        {
+          "group": "",
+          "name": "Meia Perna",
+          "price": 800,
+          "dur": 25,
+          "featured": 0
+        },
+        {
+          "group": "",
+          "name": "Virilha",
+          "price": 1500,
+          "dur": 25,
+          "featured": 0
+        },
+        {
+          "group": "",
+          "name": "Virilha Simples",
+          "price": 1000,
+          "dur": 15,
+          "featured": 0,
+          "desc": "Linha do biquíni"
+        },
+        {
+          "group": "Packs",
+          "name": "Pack 1",
+          "price": 1000,
+          "dur": 20,
+          "featured": 0,
+          "desc": "Buço + Sobrancelhas"
+        },
+        {
+          "group": "Packs",
+          "name": "Pack 2",
+          "price": 2500,
+          "dur": 40,
+          "featured": 0,
+          "desc": "Meia Perna + Virilha Simples ou Axilas"
+        },
+        {
+          "group": "Packs",
+          "name": "Pack 3",
+          "price": 3200,
+          "dur": 60,
+          "featured": 0,
+          "desc": "Perna Completa + Virilha Simples + Buço + Sobrancelhas"
+        }
+      ]
+    }
+  ]
+}

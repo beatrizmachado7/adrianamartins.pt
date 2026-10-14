@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="preload" href="/assets/fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/playfair-display-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/img/hero-adriana.webp" as="image" fetchpriority="high">
+<script src="/assets/site.js" defer></script>
+<title>Adriana Martins Estética — Manicure, pedicure, pestanas e depilação em Massamá</title>
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_PT">
+<meta property="og:title" content="Adriana Martins Estética — Massamá">
+<meta property="og:description" content="Manicure, pedicure, lash lifting e depilação a cera e a laser. Marca online.">
+<meta property="og:image" content="/assets/img/hero-adriana.webp">
+<meta name="description" content="Manicure, pedicure, lash lifting e depilação a cera e a laser em Massamá. Consulta os serviços e preços e marca online.">
+</head>
+<body data-page="index">
+<header id="site-header"></header>
+<main id="main">
+  <!-- A. Primeiro ecrã -->
+  <section class="hero has-photo" id="hero" aria-labelledby="hero-title">
+    <div class="hero-bg" id="hero-photo"><img src="/assets/img/hero-adriana.webp" alt="" fetchpriority="high" decoding="async"></div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <h1 id="hero-title">Um momento para cuidar de ti.</h1>
+        <p class="lead" id="hero-sub">Manicure, pedicure, lash lifting e depilação a cera e a laser, em Massamá. Marca o teu próximo momento de bem-estar.</p>
+        <div class="actions">
+          <a class="btn" href="/marcar.html">Fazer marcação</a>
+          <a class="text-link" href="/servicos.html">Ver serviços</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B. Serviços em destaque -->
+  <section class="section alt" aria-labelledby="t-servicos">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="t-servicos">Serviços em destaque</h2>
+        <a class="text-link" href="/servicos.html">Ver todos os serviços</a>
+      </div>
+      <div class="grid svc-grid" id="featured"><div class="spinner" aria-label="A carregar"></div></div>
+    </div>
+  </section>
+
+  <!-- C. A esteticista -->
+  <section class="section" aria-labelledby="t-sobre">
+    <div class="wrap split">
+      <div id="about-photo"></div>
+      <div>
+        <span class="eyebrow">Quem te recebe</span>
+        <h2 id="t-sobre" data-bind="professional_name">Adriana Martins</h2>
+        <p class="lead" id="about-text"></p>
+        <a class="btn secondary" href="/espaco.html">Conhecer o espaço</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D. Feedback das clientes (mensagens recebidas pelo Instagram) -->
+  <section class="section fb-sec" id="fb-sec" aria-labelledby="t-fb" hidden>
+    <div class="wrap">
+      <div class="section-head"><div><span class="eyebrow">Feedback</span><h2 id="t-fb">O que dizem as clientes</h2><p id="rating-line" class="rating-line" hidden></p></div>
+        <a class="text-link" id="fb-ig" href="#" target="_blank" rel="noopener" hidden>Ver mais no Instagram</a></div>
+      <div class="fb-row" id="testimonials"></div>
+    </div>
+  </section>
+
+
+  <!-- E. Localização e horários -->
+  <section class="section" aria-labelledby="t-info">
+    <div class="wrap">
+      <div class="visit">
+        <div><h2 id="t-info">Onde estou</h2><p class="lead" id="address"></p><a class="btn secondary" id="directions" target="_blank" rel="noopener">Como chegar</a></div>
+        <div><h3 class="label-h">Horário</h3><div id="hours"></div><div id="closures"></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script src="/assets/pages.js" defer></script>
+</body>
+</html>

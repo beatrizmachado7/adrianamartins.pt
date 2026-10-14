@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="preload" href="/assets/fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/playfair-display-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/assets/site.js" defer></script>
+<title>Fazer marcação — Adriana Martins Estética</title>
+<meta name="description" content="Marca online: escolhe o serviço, o dia e a hora disponíveis.">
+<meta name="robots" content="noindex">
+</head>
+<body data-page="marcar" data-cta="off">
+<header id="site-header"></header>
+<main id="main">
+  <section class="page-head" style="padding-bottom:20px"><div class="wrap">
+    <h1 style="font-size:clamp(2rem,5vw,2.8rem)">Fazer marcação</h1>
+  </div></section>
+  <div class="wrap booking">
+    <div>
+      <ol class="stepper" id="stepper" aria-label="Progresso da marcação"></ol>
+      <div id="step" aria-live="polite"></div>
+    </div>
+    <aside class="summary" id="summary" aria-label="Resumo da marcação"></aside>
+  </div>
+</main>
+
+<dialog id="wl-dialog" aria-labelledby="wl-title">
+  <form class="dlg-body" id="wl-form" novalidate>
+    <div class="dlg-head"><h2 id="wl-title" style="font-size:1.6rem">Avisa-me quando surgir uma vaga</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <p class="muted">Se surgir uma vaga compatível, envio-te um aviso com um prazo para reservares. Durante esse prazo, a vaga fica guardada só para ti.</p>
+    <div class="field"><label for="wl-service">Serviço pretendido</label><select class="input" id="wl-service" name="service_id" required></select></div>
+    <fieldset class="field" style="border:0;padding:0;margin:0 0 16px"><legend class="label" style="margin-bottom:8px">Dias preferidos <span class="muted small">(opcional)</span></legend>
+      <div class="toggle-group" id="wl-days"></div></fieldset>
+    <fieldset class="field" style="border:0;padding:0;margin:0 0 16px"><legend class="label" style="margin-bottom:8px">Períodos preferidos <span class="muted small">(opcional)</span></legend>
+      <div class="toggle-group">
+        <label><input type="checkbox" name="periods" value="manha"><span>Manhã</span></label>
+        <label><input type="checkbox" name="periods" value="tarde"><span>Tarde (13h–17h)</span></label>
+        <label><input type="checkbox" name="periods" value="fim_tarde"><span>Fim de tarde (após 17h)</span></label>
+      </div></fieldset>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label for="wl-from">A partir de</label><input class="input" type="date" id="wl-from" name="date_from"></div>
+      <div class="field"><label for="wl-to">Até</label><input class="input" type="date" id="wl-to" name="date_to"></div>
+    </div>
+    <div class="field"><label for="wl-name">Nome</label><input class="input" id="wl-name" name="name" autocomplete="name" required></div>
+    <div class="field"><label for="wl-email">Email para receberes o aviso</label><input class="input" type="email" id="wl-email" name="email" autocomplete="email" required></div>
+    <div class="field"><label for="wl-phone">Telefone</label><input class="input" type="tel" id="wl-phone" name="phone" autocomplete="tel" required></div>
+    <input class="hp" tabindex="-1" autocomplete="off" name="hp_extra" aria-hidden="true">
+    <div id="wl-msg" role="alert"></div>
+    <button class="btn block" type="submit">Avisa-me</button>
+  </form>
+</dialog>
+<footer id="site-footer"></footer>
+<script src="/assets/booking.js" defer></script>
+</body>
+</html>

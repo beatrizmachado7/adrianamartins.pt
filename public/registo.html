@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="preload" href="/assets/fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/playfair-display-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/assets/site.js" defer></script>
+<title>Registo de cliente — Adriana Martins Estética</title>
+<meta name="description" content="Regista-te uma vez: as tuas marcações ficam mais rápidas e recebes uma mensagem no teu aniversário.">
+<meta property="og:title" content="Regista-te — Adriana Martins">
+<meta property="og:description" content="Deixa os teus dados uma vez: as marcações ficam mais rápidas e recebes uma mensagem no teu aniversário.">
+</head>
+<body data-page="registo" data-cta="off">
+<header id="site-header"></header>
+<main id="main">
+  <section class="section reg-sec"><div class="wrap">
+    <div class="reg-card" id="reg-app">
+      <div class="reg-head">
+        <svg class="orn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.6 4.6 2.3 6.4 6.9 7-4.6.6-6.3 2.4-6.9 7-.6-4.6-2.3-6.4-6.9-7 4.6-.6 6.3-2.4 6.9-7z" fill="currentColor"/></svg>
+        <h1 id="reg-title">Regista-te</h1>
+        <p class="lead" id="reg-intro"></p>
+      </div>
+      <form id="reg-form" novalidate>
+        <div class="field"><label for="r-name">Nome completo</label><input class="input" id="r-name" name="name" autocomplete="name" maxlength="80" required><span class="err-msg" id="e-name"></span></div>
+        <div class="field"><label for="r-email">Email</label><input class="input" id="r-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" required><span class="err-msg" id="e-email"></span></div>
+        <div class="field"><label for="r-phone">Telemóvel</label><input class="input" id="r-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" required><span class="err-msg" id="e-phone"></span></div>
+        <fieldset class="field reg-bday"><legend class="label">Aniversário <span class="muted small">(só o dia e o mês)</span></legend>
+          <div class="reg-bday-row">
+            <select class="input" id="r-day" name="day" aria-label="Dia" required></select>
+            <select class="input" id="r-month" name="month" aria-label="Mês" required></select>
+          </div><span class="err-msg" id="e-birthday"></span></fieldset>
+        <input class="hp" name="hp_extra" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label class="check"><input type="checkbox" name="consent" id="r-consent">
+          <span>Quero receber uma mensagem no meu aniversário (por email ou WhatsApp). Podes retirar o consentimento quando quiseres.</span></label>
+        <p class="small muted">Usamos estes dados só para gerir as tuas marcações e, se aceitares, para a mensagem de aniversário. <a href="/privacidade.html">Política de privacidade</a></p>
+        <div id="reg-msg" role="alert"></div>
+        <button class="btn block" type="submit">Registar-me</button>
+      </form>
+    </div>
+  </div></section>
+</main>
+<footer id="site-footer"></footer>
+<script src="/assets/pages.js" defer></script>
+</body>
+</html>

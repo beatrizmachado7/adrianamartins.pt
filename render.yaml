@@ -1,0 +1,31 @@
+# Publicação no Render (render.com): New + > Blueprint > escolher este repositório.
+# O plano tem de permitir disco persistente (a base de dados vive em /data).
+services:
+  - type: web
+    name: adriana-martins-estetica
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /api/public/config
+    disk:
+      name: dados
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      # conta do painel, criada no primeiro arranque (a palavra-passe preenche-se no Render, não fica no código)
+      - key: ADMIN_EMAIL
+        value: amartinsestetica@icloud.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false   # ex.: https://www.o-teu-dominio.pt
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false   # ex.: "Adriana Martins Estética <geral@o-teu-dominio.pt>"
