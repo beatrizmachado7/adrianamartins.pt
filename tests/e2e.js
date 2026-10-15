@@ -9,7 +9,9 @@ const OUT = process.argv[2] || path.join(os.tmpdir(), 'estetica-shots');
 fs.mkdirSync(OUT, { recursive: true });
 const DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'estetica-e2e-'));
 const PORT = 3950, BASE = `http://127.0.0.1:${PORT}`;
-const env = { ...process.env, DATA_DIR: DIR, JOBS: 'off', RATE_LIMIT: 'off', SEED_SAMPLE_HOURS: '1', PUBLIC_BASE_URL: BASE };
+// E2E_NETLIFY=1: corre o mesmo teste contra a versão Netlify (Function + Blobs simulados), em vez do servidor Node
+const NETLIFY = process.env.E2E_NETLIFY === '1';
+const env = { ...process.env, DATA_DIR: DIR, JOBS: 'off', RATE_LIMIT: 'off', SEED_SAMPLE_HOURS: '1', PUBLIC_BASE_URL: BASE, ...(NETLIFY ? { DB_JOURNAL: 'DELETE' } : {}) };
 const root = path.join(__dirname, '..');
 // serviço 2 com aprovação manual, para testar o estado "Pendente"
 execFileSync('node', ['-e', "require('./src/db').db.prepare('UPDATE services SET requires_approval=CASE WHEN id=2 THEN 1 ELSE 0 END').run()"], { env, cwd: root });
@@ -17,7 +19,7 @@ execFileSync('node', ['scripts/criar-admin.js', 'admin@exemplo.pt', 'Administra�
 
 const log = (...a) => console.log('✓', ...a);
 (async () => {
-  const srv = spawn('node', ['index.js'], { env: { ...env, PORT: String(PORT) }, cwd: root, stdio: 'inherit' });
+  const srv = spawn('node', [NETLIFY ? 'scripts/netlify-local.js' : 'index.js'], { env: { ...env, PORT: String(PORT) }, cwd: root, stdio: 'inherit' });
   for (let i = 0; i < 50; i++) { try { await fetch(BASE + '/api/public/config'); break; } catch { await new Promise(r => setTimeout(r, 100)); } }
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   const origNewContext = browser.newContext.bind(browser);
@@ -234,7 +236,9 @@ const log = (...a) => console.log('✓', ...a);
     await p.fill('#f-name', 'Sofia Teste'); await p.fill('#f-phone', '914000000');
     await p.click('#details-form button[type=submit]'); await p.check('#accept'); await p.check('input[name=pay][value=mbway]'); await p.click('#confirm');
     await p.waitForSelector('.success h2');
-    assert.equal((await p.textContent('.success h2')).trim(), 'Pedido recebido — aguarda confirmação');
+    assert.equal((await p.textContent('.success h2')).trim(), 'Marcação recebida — aguarda confirmação');
+    { const href = await p.getAttribute('.success a[href*="wa.me"]', 'href'); const txt = decodeURIComponent(href.split('text=')[1]);
+      assert.ok(txt.startsWith('Olá Adriana! 😊\nAcabei de fazer uma marcação no site.'), txt); assert.ok(txt.includes('💳 Pagamento: MB WAY') && txt.includes('👤 Sofia Teste'), txt); assert.ok(!/Refer/.test(txt), 'sem referência'); }
     await shot(p, '17-pedido-pendente');
     await d.goto(BASE + '/admin/#calendario'); await d.waitForSelector('#ag-pend .pa-row');
     assert.ok((await d.textContent('#ag-pend')).includes('Sofia Teste'), 'pedido pendente à mão no calendário');
@@ -242,7 +246,7 @@ const log = (...a) => console.log('✓', ...a);
     assert.ok((await d.textContent('.feed')).includes('Sofia Teste'), 'pedido nas notificações');
     await d.goto(BASE + '/admin/#marcacoes/pedidos'); await d.waitForSelector('.pend [data-approve]');
     await shot(d, '17b-painel-pedidos', false);
-    assert.match(await d.textContent('.pend'), /Sinal por receber · MB WAY/);
+    assert.match(await d.textContent('.pend'), /Pagamento: MB WAY/); assert.match(await d.textContent('.pend'), /Sinal por receber/);
     // aprovar sem sinal pede confirmação (dois cliques)
     await d.click('.pend [data-approve]'); assert.match(await d.textContent('.pend [data-approve]'), /Sinal por receber/);
     // registar o sinal (50%) — valor, método e nota já preenchidos
@@ -297,7 +301,7 @@ const log = (...a) => console.log('✓', ...a);
     await d.keyboard.press('Escape');
     log('nenhuma duração nem hora de fim no dashboard');
     await d.goto(BASE + '/admin/#definicoes/lembretes'); await d.waitForSelector('#waf');
-    assert.equal(await d.locator('#waf textarea').count(), 3, 'três mensagens de WhatsApp: pedido recebido, pedido confirmado, aniversário');
+    assert.equal(await d.locator('#waf textarea').count(), 4, 'quatro mensagens de WhatsApp: a da cliente ao marcar, marcação confirmada, lembrete e aniversário');
     await shot(d, '21-painel-mensagens', false);
     await d.reload(); await d.waitForSelector('#waf');
     log('mensagens de WhatsApp editáveis; sessão persiste ao recarregar');

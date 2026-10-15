@@ -15,7 +15,7 @@ app.disable('x-powered-by');
 // TRUST_PROXY: true = 1 proxy (Render); um número = proxies à frente (ex.: 2 com o Netlify a encaminhar para o Render)
 app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : /^\d+$/.test(process.env.TRUST_PROXY || '') ? Number(process.env.TRUST_PROXY) : false);
 // compressão gzip/brotli para HTML, CSS, JS e JSON (menos dados no telemóvel)
-app.use(require('compression')({ threshold: 1024 }));
+if (process.env.DB_DRIVER !== 'sqljs') app.use(require('compression')({ threshold: 1024 })); // no Netlify, a compressão é feita pela CDN
 const smallJson = express.json({ limit: '100kb' });
 app.use((req, res, next) => req.path.startsWith('/api/admin/uploads') ? next() : smallJson(req, res, next));
 app.use((req, res, next) => { if (req.body === undefined) req.body = {}; next(); });
@@ -66,7 +66,7 @@ function auth(req, res, next) {
 
 // ---------- API pública ----------
 const pub = express.Router();
-const PUBLIC_KEYS = ['business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials',
+const PUBLIC_KEYS = ['wa_tpl_client', 'business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials',
   'map_embed_url', 'map_link_url', 'professional_name', 'about_text', 'space_title', 'space_text', 'space_image', 'space_points', 'training', 'experience_text', 'experience_steps', 'hero_image', 'hero_image_2', 'hero_image_3',
   'about_image', 'about_image_2', 'video_url', 'video_file', 'video_image', 'services_image', 'pricing_image', 'booking_image', 'reviews_image', 'contacts_image', 'gallery', 'cancellation_policy', 'cancel_limit_hours', 'reschedule_limit_hours', 'min_notice_hours', 'max_advance_days', 'arrival_note', 'faq',
   'pending_hold_hours', 'waitlist_offer_minutes', 'privacy_controller', 'access_info', 'booking_policy', 'legal_id', 'register_enabled', 'register_title', 'register_intro',
@@ -452,14 +452,27 @@ adm.get('/inbox', (req, res) => {
   const t = A.toLocal(Date.now()).plus({ days: 1 }).toISODate(), [a, b] = dayRange(t);
   const tomorrow = db.prepare(`${BOOKING_SELECT} WHERE b.status='confirmed' AND b.start_at BETWEEN ? AND ? ORDER BY b.start_at`).all(a, b);
   const pending = db.prepare("SELECT COUNT(*) n FROM bookings WHERE status='pending'").get().n;
-  for (const x of tomorrow) x.wa_reminder = N.waMessages(x, `${getSettings().public_base_url}/gerir.html?t=${T.manageToken(x.ref, x.created_at)}`).reminder;
-  res.json({ seen_at: seen, unread: items.filter(i => i.at > seen).length, items, tomorrow, tomorrow_date: t, pending,
+  const rem = remindersTomorrow(); for (const x of tomorrow) { const r = rem.list.find(y => y.id === x.id) || {}; x.wa_reminder = r.wa_reminder; x.wa_reminder_sent = !!r.wa_reminder_sent; }
+  res.json({ seen_at: seen, unread: items.filter(i => i.at > seen).length, items, tomorrow, tomorrow_date: t, pending, reminder_hour: rem.hour, reminder_due: rem.due,
     emails: db.prepare('SELECT id,booking_id,kind,recipient,status,error,created_at FROM notifications ORDER BY id DESC LIMIT 60').all(), integrations: N.integrations() });
 });
+// ---------- lembretes por WhatsApp na véspera (a partir da hora escolhida, 21h por defeito) ----------
+function remindersTomorrow() {
+  const s = getSettings(), now = A.toLocal(Date.now()), t = now.plus({ days: 1 }).toISODate(), [a, b] = dayRange(t);
+  const list = db.prepare(`${BOOKING_SELECT} WHERE b.status='confirmed' AND b.start_at BETWEEN ? AND ? ORDER BY b.start_at`).all(a, b);
+  const sentQ = db.prepare("SELECT 1 FROM booking_events WHERE booking_id=? AND action='WhatsApp aberto' AND details='lembrete' LIMIT 1");
+  for (const x of list) {
+    x.wa_reminder = N.waMessages(x, `${s.public_base_url}/gerir.html?t=${T.manageToken(x.ref, x.created_at)}`).reminder;
+    x.wa_reminder_sent = !!sentQ.get(x.id);
+  }
+  const hour = Number(s.reminder_wa_hour) || 21;
+  return { date: t, hour, due: now.hour >= hour, list, unsent: list.filter(x => !x.wa_reminder_sent).length };
+}
+adm.get('/reminders', (req, res) => res.json(remindersTomorrow()));
 adm.get('/inbox/count', (req, res) => {
   const seen = Number(metaGet('inbox_seen_at') || Date.now() - 7 * 86400000);
   res.json({ unread: db.prepare("SELECT COUNT(*) n FROM booking_events WHERE actor IN ('cliente','sistema') AND at > ?").get(seen).n,
-    pending: db.prepare("SELECT COUNT(*) n FROM bookings WHERE status='pending'").get().n });
+    pending: db.prepare("SELECT COUNT(*) n FROM bookings WHERE status='pending'").get().n, reminders: (r => r.due ? r.unsent : 0)(remindersTomorrow()) });
 });
 adm.post('/inbox/seen', (req, res) => { metaSet('inbox_seen_at', Date.now()); res.json({ ok: true }); });
 
@@ -628,7 +641,7 @@ adm.post('/integrations/test-email', wrap(async (req, res) => {
   res.json({ ok, status: last.status, error: last.error || '', to: s.email });
 }));
 adm.post('/bookings/:id/wa-log', (req, res) => {
-  const L = { pending: 'pedido recebido', confirmed: 'pedido confirmado', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' };
+  const L = { pending: 'marcação recebida', confirmed: 'marcação confirmada', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' };
   const k = L[req.body.kind] ? req.body.kind : null; if (!k) throw new AppError(422, 'VALIDATION', 'Mensagem desconhecida.');
   C.logEvent(int(req.params.id), 'painel', 'WhatsApp aberto', L[k]); res.json({ ok: true });
 });
@@ -637,7 +650,7 @@ adm.get('/integrations', (req, res) => {
   res.json({ ...N.integrationStatus(), last30: Object.fromEntries(recent.map(r => [r.status, r.n])) });
 });
 const NUMERIC = { slot_step_min: [5, 240], min_notice_hours: [0, 720], max_advance_days: [1, 365], cancel_limit_hours: [0, 720],
-  reschedule_limit_hours: [0, 720], pending_hold_hours: [1, 168], waitlist_offer_minutes: [10, 2880], waitlist_max_offers: [1, 10], reminder_hours: [1, 168], review_invite_delay_hours: [0, 168], deposit_percent: [10, 100] };
+  reschedule_limit_hours: [0, 720], pending_hold_hours: [1, 168], waitlist_offer_minutes: [10, 2880], waitlist_max_offers: [1, 10], reminder_hours: [1, 168], reminder_wa_hour: [8, 23], review_invite_delay_hours: [0, 168], deposit_percent: [10, 100] };
 adm.put('/settings', (req, res) => {
   const out = {};
   for (const [k, v] of Object.entries(req.body || {})) {
@@ -807,24 +820,27 @@ adm.post('/reviews/:id', (req, res) => { C.moderateReview(int(req.params.id), re
 // fotografias: o painel reduz a imagem no browser (WebP/JPEG, máx. 1600 px) antes de enviar
 const UPLOAD_DIR = path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'uploads');
 require('fs').mkdirSync(UPLOAD_DIR, { recursive: true });
-adm.post('/uploads', express.json({ limit: '4mb' }), (req, res) => {
+// no Netlify as fotografias ficam no Netlify Blobs (global.__UPLOAD_STORE, definido em netlify/functions/api.js)
+const saveUpload = async (name, buf, type) => global.__UPLOAD_STORE ? global.__UPLOAD_STORE.set(name, buf, type) : require('fs').writeFileSync(path.join(UPLOAD_DIR, name), buf);
+adm.post('/uploads', express.json({ limit: '4mb' }), wrap(async (req, res) => {
   const m = String(req.body.data || '').match(/^data:image\/(webp|jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
   if (!m) throw new AppError(422, 'VALIDATION', 'Formato de imagem não suportado (use JPG, PNG ou WebP).');
   const buf = Buffer.from(m[2], 'base64');
   if (buf.length > 2.5 * 1024 * 1024) throw new AppError(422, 'VALIDATION', 'A imagem é demasiado grande (máx. 2,5 MB depois de otimizada).');
   const name = `${Date.now()}-${T.random(6)}.${m[1] === 'jpeg' ? 'jpg' : m[1]}`;
-  require('fs').writeFileSync(path.join(UPLOAD_DIR, name), buf);
+  await saveUpload(name, buf, 'image/' + m[1]);
   res.status(201).json({ url: `/uploads/${name}` });
-});
+}));
 
 // vídeo do espaço (MP4/WebM, enviado tal como está) — toca sozinho, sem som, em "O espaço"
-adm.post('/uploads/video', express.raw({ type: ['video/mp4', 'video/webm', 'video/quicktime'], limit: '60mb' }), (req, res) => {
+adm.post('/uploads/video', express.raw({ type: ['video/mp4', 'video/webm', 'video/quicktime'], limit: '60mb' }), wrap(async (req, res) => {
   const ext = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov' }[String(req.headers['content-type']).split(';')[0]];
   if (!ext || !Buffer.isBuffer(req.body) || !req.body.length) throw new AppError(422, 'VALIDATION', 'Formato de vídeo não suportado (usa MP4).');
+  if (global.__UPLOAD_STORE && req.body.length > 5.5 * 1024 * 1024) throw new AppError(413, 'TOO_LARGE', 'No Netlify, os vídeos podem ter no máximo 5 MB. Comprime o vídeo ou usa um link do Instagram.');
   const name = `${Date.now()}-${T.random(6)}.${ext}`;
-  require('fs').writeFileSync(path.join(UPLOAD_DIR, name), req.body);
+  await saveUpload(name, req.body, String(req.headers['content-type']).split(';')[0]);
   res.status(201).json({ url: `/uploads/${name}` });
-});
+}));
 
 adm.get('/notifications', (req, res) => res.json(db.prepare('SELECT id,booking_id,waitlist_id,channel,kind,recipient,subject,status,error,created_at FROM notifications ORDER BY id DESC LIMIT 200').all()));
 
@@ -840,6 +856,12 @@ app.use((err, req, res, next) => {
 });
 
 // ---------- ficheiros estáticos ----------
+app.get('/uploads/:name', wrap(async (req, res, next) => {
+  if (!global.__UPLOAD_STORE) return next();
+  const f = /^[\w.-]+$/.test(req.params.name) ? await global.__UPLOAD_STORE.get(req.params.name) : null;
+  if (!f) return res.status(404).send('Não encontrado');
+  res.set({ 'Content-Type': f.type || 'application/octet-stream', 'Cache-Control': 'public, max-age=2592000, immutable' }).send(f.data);
+}));
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '30d', immutable: true }));
 app.get('/sobre.html', (req, res) => res.redirect(301, '/espaco.html'));
 app.get('/precario.html', (req, res) => res.redirect(301, '/servicos.html'));

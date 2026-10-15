@@ -195,6 +195,7 @@
   // caixa com as instruções do sinal — b: { ref, payment_method, deposit_cents, paid_cents, price_cents }
   function payInfo(b, cfg) {
     if (!cfg.deposit_enabled) return '';
+    if (b.payment_method === 'mao') return `<div class="pay-box"><strong>Pagamento em mão</strong><p>Não precisas de pagar sinal. Pagas o valor total${b.price_cents != null ? ` (<b>${eur(b.price_cents)}</b>)` : ''} no dia da marcação, no espaço.</p></div>`;
     const pct = cfg.deposit_percent || 50, dep = b.deposit_cents, paid = b.paid_cents || 0;
     if (dep != null && paid >= dep) {
       const rest = b.price_cents != null ? b.price_cents - paid : null;
@@ -206,8 +207,7 @@
     const refLine = `<div class="pay-line"><span>Descrição / referência</span><b>${esc(b.ref)}</b>${copyBtn(b.ref)}</div>`;
     const amount = dep != null ? `<b>${eur(dep)}</b> (${pct}% do valor)` : `<b>${pct}% do valor</b> — combinamos o valor contigo`;
     let how;
-    if (b.payment_method === 'mao') how = `<p>Escolheste <b>pagar em mão</b>. Combinamos contigo a entrega do sinal no espaço; os restantes ${100 - pct}% pagas no final do serviço.</p>`;
-    else if (b.payment_method === 'transferencia' && iban) how = `<p>Faz uma transferência bancária para:</p>${ibanLine}${refLine}`;
+    if (b.payment_method === 'transferencia' && iban) how = `<p>Faz uma transferência bancária para:</p>${ibanLine}${refLine}`;
     else if (b.payment_method === 'mbway' || !iban) how = mb ? `<p>Envia por MB WAY para:</p>${mbLine}${refLine}` : '<p>Envio-te os dados para o pagamento por mensagem.</p>';
     else how = `<p>Podes pagar por MB WAY ou transferência:</p>${mbLine}${ibanLine}${refLine}`;
     return `<div class="pay-box"><strong>Sinal para reservar: ${amount}</strong>${how}

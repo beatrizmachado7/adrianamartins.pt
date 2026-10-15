@@ -54,7 +54,7 @@ test('a forma de pagamento escolhida fica na marcação, com sinal de 50%', asyn
   assert.equal(r.status, 201);
   assert.equal(r.body.payment_method, 'mbway'); assert.equal(r.body.deposit_cents, 1500); assert.equal(r.body.paid_cents, 0);
   const m = await book(at(d, '11:00'), { payment_method: 'mao' });
-  assert.equal(m.body.payment_method, 'mao');
+  assert.equal(m.body.payment_method, 'mao'); assert.equal(m.body.deposit_cents, null, 'em mão não há sinal');
   // transferência sem IBAN configurado não é aceite (fica sem indicação); valor desconhecido também
   assert.equal((await book(at(d, '12:00'), { payment_method: 'transferencia' })).body.payment_method, '');
   assert.equal((await book(at(d, '13:00'), { payment_method: 'bitcoin' })).body.payment_method, '');
@@ -85,7 +85,9 @@ test('painel: registar o sinal num pedido pendente, aprovar e pagar o restante',
   assert.equal(b.paid_cents, 3000); assert.equal(b.status, 'confirmed');
   // a Adriana pode corrigir a forma de pagamento
   b = (await adm('PATCH', `/bookings/${id}`, { payment_method: 'mao' })).body;
-  assert.equal(b.payment_method, 'mao');
+  assert.equal(b.payment_method, 'mao'); assert.equal(b.deposit_cents, null);
+  b = (await adm('PATCH', `/bookings/${id}`, { payment_method: 'mbway' })).body;
+  assert.equal(b.deposit_cents, 1500, 'voltar a MB WAY repõe o sinal');
 });
 
 test('email do pedido inclui as instruções do sinal (MB WAY e referência)', async () => {
@@ -138,11 +140,34 @@ test('só WhatsApp: marcar sem email, cliente reconhecida pelo telemóvel, lista
   assert.equal((await call('POST', '/api/public/waitlist', { service_id: 1, name: 'Marta Sem Email', phone: '963 111 222' })).status, 409, 'duplicado pelo telemóvel');
   const id = db.prepare('SELECT id FROM bookings WHERE ref=?').get(r1.body.ref).id;
   let b = (await adm('GET', `/bookings/${id}`)).body;
-  assert.match(b.wa.pending, /aqui no espaço/);
+  assert.match(b.wa.pending, /Não precisas de pagar sinal/); assert.equal(b.deposit_cents, null, 'em mão: sem sinal');
   db.prepare("UPDATE bookings SET status='completed', start_at=start_at-30*86400000, end_at=end_at-30*86400000 WHERE id=?").run(id);
   b = (await adm('GET', `/bookings/${id}`)).body;
   assert.match(b.review_url, /avaliar\.html\?t=/); assert.ok(b.wa.review.includes(b.review_url));
   const tok = b.review_url.split('t=')[1];
   assert.equal((await call('GET', `/api/public/review/${tok}`)).status, 200, 'o link de avaliação funciona');
   assert.match(b.wa.cancelled, /foi cancelada/);
+});
+
+test('lembrete por WhatsApp na véspera: lista de amanhã, mensagem preenchida e registo do envio', async () => {
+  const d = day(1);
+  await adm('PUT', `/day-slots/${d}`, { times: ['18:30'] });
+  const r = await book(at(d, '18:30'), { payment_method: 'mao' });
+  assert.equal(r.status, 201, JSON.stringify(r.body));
+  const id = db.prepare('SELECT id FROM bookings WHERE ref=?').get(r.body.ref).id;
+  db.prepare("UPDATE bookings SET status='confirmed', hold_expires_at=NULL WHERE id=?").run(id);
+  let rem = (await adm('GET', '/reminders')).body;
+  assert.equal(rem.hour, 21); assert.equal(rem.date, d);
+  const it = rem.list.find(x => x.id === id);
+  assert.ok(it, 'marcação de amanhã na lista');
+  assert.match(it.wa_reminder, /lembrar da tua marcação de amanhã/); assert.match(it.wa_reminder, /18:30/); assert.ok(!/\{\w+\}/.test(it.wa_reminder));
+  assert.equal(it.wa_reminder_sent, false);
+  const c1 = (await adm('GET', '/inbox/count')).body;
+  assert.equal(c1.reminders, rem.due ? rem.unsent : 0);
+  assert.equal((await adm('POST', `/bookings/${id}/wa-log`, { kind: 'reminder' })).status, 200);
+  rem = (await adm('GET', '/reminders')).body;
+  assert.equal(rem.list.find(x => x.id === id).wa_reminder_sent, true);
+  assert.equal((await adm('PUT', '/settings', { reminder_wa_hour: '20' })).status, 200);
+  assert.equal((await adm('GET', '/reminders')).body.hour, 20);
+  assert.equal((await adm('PUT', '/settings', { reminder_wa_hour: 3 })).status, 422);
 });

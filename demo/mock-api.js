@@ -33,7 +33,7 @@
     business_name: 'ADRIANA MARTINS', hero_title: 'Um momento para cuidar de ti.',
     hero_subtitle: 'Manicure, pedicure, lash lifting e depilação a cera e a laser, em Massamá. Marca o teu próximo momento de bem-estar.',
     legal_id: '[IDENTIFICAÇÃO DO NEGÓCIO — nome legal e NIF]', access_info: '',
-    booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e envio-te a resposta por WhatsApp. Se precisar de propor outro horário, também te aviso por WhatsApp e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
+    booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e envio-te a resposta por WhatsApp. Se precisar de propor outro horário, também te aviso por WhatsApp e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora com pagamento por MB WAY ou transferência bancária, peço um sinal de 50% do valor do serviço, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar: nesse caso não há sinal e pagas o valor total no dia, no espaço.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
     address_line: 'Avenida Américo Ferrer Lopes Loja 11C', postal_code: '2745-715', city: 'Massamá', phone: '939 907 962', email: 'amartinsestetica@icloud.com', whatsapp: '939 907 962', instagram: 'https://www.instagram.com/estetica_adrianamartins/',
     map_embed_url: '', map_link_url: '', professional_name: 'Adriana Martins',
     about_text: 'Sou a Adriana Martins, esteticista. O meu objetivo é ajudar cada cliente a sentir-se bem consigo, através de cuidados que valorizam a sua beleza natural. Acredito num atendimento próximo e atento, onde há espaço para ouvir as suas necessidades e tornar cada visita num momento de cuidado pessoal.',
@@ -55,12 +55,12 @@
     birthday_message: 'Olá {nome}, muitos parabéns! 🎂\n\nHoje o dia é todo teu e merece ser celebrado com tudo aquilo que te faz feliz. Obrigada por me deixares fazer parte dos teus momentos de cuidado — é sempre um gosto enorme receber-te.\n\nQue este novo ano te traga saúde, alegria e muitos motivos para sorrir.\n\nUm beijinho grande,\n{profissional}', birthday_email_enabled: false,
     deposit_enabled: true, deposit_percent: 50, mbway_number: '939 907 962', iban: '', iban_name: '',
     payment_note: 'Os restantes 50% são pagos no final do serviço.',
-    wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pelo teu pedido de marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar o teu pedido aqui: {link}\n\nUm beijinho,\n{profissional}',
-    wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
+    wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pela tua marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar a tua marcação aqui: {link}\n\nUm beijinho,\n{profissional}',
+    wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\n{sinal_texto}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
     wa_tpl_proposed: 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}',
     wa_tpl_cancelled: 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}',
     wa_tpl_review: 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}',
-    wa_tpl_reminder: 'Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}',
+    wa_tpl_reminder: 'Olá {nome}! 😊 Passo só para te lembrar da tua marcação de amanhã.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nSe puderes, confirma a tua presença aqui: {link}\n\nAté amanhã!\n{profissional}', reminder_wa_hour: 21, wa_tpl_client: 'Olá Adriana! 😊\nAcabei de fazer uma marcação no site.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n💳 Pagamento: {pagamento}\n👤 {nome}\n\nObrigada!',
     arrival_note: 'Chega 5 minutos antes. Se tiveres alguma dúvida sobre a preparação, contacta-me antes da visita.',
     faq: [
       { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome e telemóvel. Confirmo a marcação no prazo máximo de 24 horas e envio-te a confirmação por WhatsApp, com um link para gerires a marcação.' },
@@ -273,7 +273,7 @@
     const b = { id: id(), ref: ref(), customer_id: custId, service_id: svc.id, staff_id: chosen.id, resource_id: svc.resource_id, service_name: svc.name, price_cents: svc.price_cents, price_type: svc.price_type,
       start_at: start, status, hold_expires_at: status === 'pending' && !admin ? Math.min(Date.now() + S.settings.pending_hold_hours * H, Math.max(start, Date.now() + H)) : null, token: rnd(), review_token: null,
       source: admin ? 'admin' : 'online', cancel_reason: '', internal_notes: clean(inp.internal_notes, 1000), created_at: Date.now(), updated_at: Date.now(), reminder_sent_at: null, review_invited_at: null,
-      proposed: 0, attendance_confirmed_at: null, attendance_source: '', payment_method: payPref(inp.payment_method), deposit_cents: depositFor(svc.price_cents) };
+      proposed: 0, attendance_confirmed_at: null, attendance_source: '', payment_method: payPref(inp.payment_method), deposit_cents: payPref(inp.payment_method) === 'mao' ? null : depositFor(svc.price_cents) };
     S.bookings.push(b);
     ev(b, admin ? 'painel' : 'cliente', admin ? 'Marcação criada no painel' : status === 'pending' ? 'Pedido enviado pelo site' : 'Marcação feita pelo site', `${svc.name} · ${dmyhm(start)}${admin && inp.channel ? ' · via ' + clean(inp.channel, 30) : ''}`);
     if (!(admin && inp.notify === false)) notify(status === 'pending' ? 'pending' : 'confirmed', b);
@@ -485,6 +485,16 @@
           (s.reviews ||= []).push({ id: ++s.seq, booking_id: b.id, rating, comment, author_name: c.name.split(' ')[0] + ' (demo)', service_name: b.service_name, verified: 1, status: i === 2 ? 'pending' : 'published', hidden_reason: '', reply: '', created_at: b.start_at + 3 * H, demo: true }); });
     }
   }
+  function migrate26() { if (S.v26) return; S.v26 = true; if (S.settings.wa_tpl_reminder === 'Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}') S.settings.wa_tpl_reminder = DEFAULTS.wa_tpl_reminder; if (S.settings.reminder_wa_hour == null) S.settings.reminder_wa_hour = 21; if (S.settings.wa_tpl_client == null) S.settings.wa_tpl_client = DEFAULTS.wa_tpl_client; dirty = true; }
+  function remindersTomorrow() {
+    const t = addDays(today(), 1), [a, z] = dayRange(t), hour = Number(S.settings.reminder_wa_hour) || 21;
+    const list = S.bookings.filter(b => b.status === 'confirmed' && b.start_at >= a && b.start_at <= z).map(b => ({ ...SEL(b), wa_reminder: waMessages(b).reminder, wa_reminder_sent: (S.events || []).some(e => e.booking_id === b.id && e.action === 'WhatsApp aberto' && e.details === 'lembrete') })).sort((x, y) => x.start_at - y.start_at);
+    return { date: t, hour, due: new Date().getHours() >= hour, list, unsent: list.filter(x => !x.wa_reminder_sent).length };
+  }
+  function migrate25() { if (S.v25) return; S.v25 = true; if (S.settings.wa_tpl_pending === 'Olá {nome}! 😊 Obrigada pelo teu pedido de marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar o teu pedido aqui: {link}\n\nUm beijinho,\n{profissional}') S.settings.wa_tpl_pending = DEFAULTS.wa_tpl_pending; (S.bookings || []).forEach(b => (b.events || []).forEach(e => { if (e.details === 'pedido recebido') e.details = 'marcação recebida'; if (e.details === 'pedido confirmado') e.details = 'marcação confirmada'; })); dirty = true; }
+  function migrate24() { if (S.v24) return; S.v24 = true; if (/combinamos a entrega do sinal/.test(S.settings.booking_policy || '')) S.settings.booking_policy = DEFAULTS.booking_policy;
+    (S.bookings || []).forEach(b => { if (b.payment_method === 'mao' && ['pending', 'confirmed'].includes(b.status)) b.deposit_cents = null; }); dirty = true; }
+  function migrate23() { if (S.v23) return; S.v23 = true; if (S.settings.wa_tpl_confirmed === 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}') S.settings.wa_tpl_confirmed = DEFAULTS.wa_tpl_confirmed; dirty = true; }
   function migrate22() { if (S.v22) return; S.v22 = true; const st = S.settings;
     if (st.wa_tpl_pending === 'Olá {nome}! Recebi o teu pedido de marcação para {servico}, {data} às {hora}. 😊\n\n{sinal_texto}\n\nPodes ver o teu pedido aqui: {link}\n\n{profissional}') st.wa_tpl_pending = DEFAULTS.wa_tpl_pending;
     if (st.wa_tpl_confirmed === 'Olá {nome}! A tua marcação está confirmada: {servico}, {data} às {hora}. 🤍\n\nMorada: {morada}\n\nSe precisares de alterar, usa este link (até 48 horas antes): {link}\n\nAté breve!\n{profissional}') st.wa_tpl_confirmed = DEFAULTS.wa_tpl_confirmed; dirty = true; }
@@ -519,7 +529,7 @@
   function migrate15() { if (S.v15) return; S.v15 = true; for (const k of ['space_title', 'space_text', 'space_image', 'space_points']) if (!(k in S.settings)) S.settings[k] = JSON.parse(JSON.stringify(DEFAULTS[k])); dirty = true; }
   function migrate14() { if (S.v14) return; S.v14 = true; if (!S.settings.whatsapp) S.settings.whatsapp = '939 907 962'; dirty = true; }
   if (!S || !S.settings) S = seed();
-  migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22();
+  migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); migrate23(); migrate24(); migrate25(); migrate26();
   const save = () => {
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem armazenamento: fica em memória */ }
     if (dirty && window.DemoAPI && window.DemoAPI.onSave) window.DemoAPI.onSave(S);
@@ -551,8 +561,10 @@
     const st = S.settings, paid = paidOf(b.id), dep = b.deposit_cents, eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
     const mb = String(st.mbway_number || '').trim(), iban = String(st.iban || '').trim(); let sinal = '';
     if (st.deposit_enabled) { const v = dep != null ? eur(dep) : `${st.deposit_percent}% do valor`;
-      if (dep != null && paid >= dep) sinal = 'Já recebi o teu sinal, obrigada!';
-      else if (b.payment_method === 'mao') sinal = `Combinamos a entrega do sinal (${v}) aqui no espaço.`;
+      if (b.payment_method === 'mao') sinal = `Pagamento em mão: pagas o valor total${b.price_cents != null ? ' (' + eur(b.price_cents) + ')' : ''} no dia, no espaço. Não precisas de pagar sinal.`;
+      else if (dep != null && paid >= dep) sinal = 'Já recebi o teu sinal, obrigada!';
+      else if (b.status === 'confirmed' && b.payment_method !== 'mao' && (mb || iban)) sinal = b.payment_method === 'transferencia' && iban ? `Falta só o sinal de ${v}, por transferência para o IBAN ${iban} (referência ${b.ref}).` : `Falta só o sinal de ${v}, por MB WAY para o ${mb} (referência ${b.ref}).`;
+      else if (b.payment_method === 'mao') sinal = b.status === 'confirmed' ? `Pagamento em mão, no espaço (sinal de ${v}).` : `Combinamos a entrega do sinal (${v}) aqui no espaço.`;
       else if (b.payment_method === 'transferencia' && iban) sinal = `Para reservar, peço um sinal de ${v} por transferência para o IBAN ${iban}, com a referência ${b.ref}.`;
       else if (mb) sinal = `Para reservar, peço um sinal de ${v} por MB WAY para o ${mb}, com a referência ${b.ref} na descrição. Assim que receber, confirmo a tua marcação.`; }
     const c = S.customers.find(x => x.id === b.customer_id) || {};
@@ -599,14 +611,14 @@
       out.push(l.map(c => ({ id: c.id, name: c.name, email: c.email, phone: c.phone, created_at: c.created_at, reason: k[0] === 't' ? 'mesmo telefone' : 'mesmo email' }))); }
     return out;
   }
-  const PUBLIC_KEYS = ['business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials', 'map_embed_url', 'map_link_url', 'professional_name',
+  const PUBLIC_KEYS = ['wa_tpl_client', 'business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials', 'map_embed_url', 'map_link_url', 'professional_name',
     'about_text', 'space_title', 'space_text', 'space_image', 'space_points', 'training', 'experience_text', 'experience_steps', 'hero_image', 'about_image', 'gallery', 'video_url', 'video_file', 'video_image', 'cancellation_policy', 'cancel_limit_hours', 'reschedule_limit_hours', 'min_notice_hours',
     'max_advance_days', 'arrival_note', 'faq', 'pending_hold_hours', 'waitlist_offer_minutes', 'privacy_controller', 'access_info', 'booking_policy', 'legal_id', 'register_enabled', 'register_title', 'register_intro',
     'deposit_enabled', 'deposit_percent', 'mbway_number', 'iban', 'iban_name', 'payment_note'];
   const svcOut = s => { const { duration_min, ...rest } = s; return { ...rest, staff: S.staffServices.filter(([, b]) => b === s.id).map(([a]) => a) }; };
   const vh = rows => (rows || []).filter(r => r.weekday >= 1 && r.weekday <= 7 && /^\d\d:\d\d$/.test(r.start) && /^\d\d:\d\d$/.test(r.end) && r.start < r.end);
   const NUM = { deposit_percent: [10, 100], slot_step_min: [5, 240], min_notice_hours: [0, 720], max_advance_days: [1, 365], cancel_limit_hours: [0, 720], reschedule_limit_hours: [0, 720], pending_hold_hours: [1, 168],
-    waitlist_offer_minutes: [10, 2880], waitlist_max_offers: [1, 10], reminder_hours: [1, 168], review_invite_delay_hours: [0, 168] };
+    waitlist_offer_minutes: [10, 2880], waitlist_max_offers: [1, 10], reminder_hours: [1, 168], review_invite_delay_hours: [0, 168], reminder_wa_hour: [8, 23] };
   const ZONES = ['Europe/Lisbon', 'Atlantic/Madeira', 'Atlantic/Azores'];
   const INTEGR = { email: { configured: false, missing: ['SMTP_HOST', 'SMTP_FROM'], from: '', auth: false, port: 587 },
     whatsapp: { configured: true, available: true, mode: 'one_tap', note: 'Mensagens com um toque: em cada marcação, o painel abre o teu WhatsApp com a mensagem já escrita. Só tens de carregar em Enviar.' },
@@ -715,7 +727,7 @@
     ['PATCH', /^\/api\/admin\/bookings\/(\d+)$/, (m, q, body) => {
       const b = bk(m[1]);
       if (body.status) setStatus(b, body.status, body.reason);
-      if (typeof body.payment_method === 'string') { const pm = payPref(body.payment_method); if (pm !== (b.payment_method || '')) { b.payment_method = pm; ev(b, 'painel', 'Forma de pagamento alterada', PAY_PREFS[pm] || 'sem indicação'); } }
+      if (typeof body.payment_method === 'string') { const pm = payPref(body.payment_method); if (pm !== (b.payment_method || '')) { b.payment_method = pm; b.deposit_cents = pm === 'mao' ? null : depositFor(b.price_cents); ev(b, 'painel', 'Forma de pagamento alterada', PAY_PREFS[pm] || 'sem indicação'); } }
       if (typeof body.internal_notes === 'string') { b.internal_notes = clean(body.internal_notes, 1000); ev(b, 'painel', 'Notas internas atualizadas'); }
       if (body.attendance) { if (b.status !== 'confirmed') throw new E(409, 'Só marcações confirmadas.'); b.attendance_confirmed_at = Date.now(); b.attendance_source = clean(body.attendance, 40); ev(b, 'painel', 'Presença confirmada', `Registada no painel (${b.attendance_source})`); }
       return detail(b);
@@ -802,7 +814,7 @@
     ['PUT', /^\/api\/admin\/hours$/, (m, q, b) => { S.hours = vh(b.hours).map(h => ({ weekday: +h.weekday, start: h.start, end: h.end })); S.settings.hours_confirmed = true; return { ok: true }; }],
     ['GET', /^\/api\/admin\/settings$/, () => ({ settings: S.settings, integrations: { email: false, whatsapp: false, sms: false }, status: INTEGR, zones: ZONES })],
     ['POST', /^\/api\/admin\/integrations\/test-email$/, () => ({ ok: false, status: 'not_configured', error: 'Na demonstração não são enviados emails.' })],
-    ['POST', /^\/api\/admin\/bookings\/(\d+)\/wa-log$/, (m, q, body) => { const L = { pending: 'pedido recebido', confirmed: 'pedido confirmado', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' }; if (!L[body.kind]) throw new E(422, 'Mensagem desconhecida.'); ev(bk(m[1]), 'painel', 'WhatsApp aberto', L[body.kind]); return { ok: true }; }],
+    ['POST', /^\/api\/admin\/bookings\/(\d+)\/wa-log$/, (m, q, body) => { const L = { pending: 'marcação recebida', confirmed: 'marcação confirmada', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' }; if (!L[body.kind]) throw new E(422, 'Mensagem desconhecida.'); ev(bk(m[1]), 'painel', 'WhatsApp aberto', L[body.kind]); return { ok: true }; }],
     ['GET', /^\/api\/admin\/integrations$/, () => { const l = {}; S.notifications.filter(n => n.created_at > Date.now() - 30 * D).forEach(n => { l[n.status] = (l[n.status] || 0) + 1; }); return { ...INTEGR, last30: l }; }],
     ['PUT', /^\/api\/admin\/settings$/, (m, q, b) => {
       for (const [k, v] of Object.entries(b)) {
@@ -915,11 +927,12 @@
         return { id: e.id, at: e.at, actor: e.actor, action: e.action, details: e.details, booking_id: e.booking_id, status: b.status, start_at: b.start_at, service_name: b.service_name, customer_name: c.name, customer_phone: c.phone };
       });
       const t = addDays(today(), 1), [a, z] = dayRange(t);
-      return { seen_at: seen, unread: items.filter(i => i.at > seen).length, items, tomorrow: S.bookings.filter(b => b.status === 'confirmed' && b.start_at >= a && b.start_at <= z).map(b => ({ ...SEL(b), wa_reminder: waMessages(b).reminder })).sort((x, y) => x.start_at - y.start_at),
+      return { seen_at: seen, unread: items.filter(i => i.at > seen).length, items, tomorrow: remindersTomorrow().list, reminder_hour: remindersTomorrow().hour, reminder_due: remindersTomorrow().due,
         tomorrow_date: t, pending: S.bookings.filter(b => b.status === 'pending').length, emails: S.notifications.slice(0, 60), integrations: { email: false, whatsapp: false, sms: false } };
     }],
     ['GET', /^\/api\/admin\/inbox\/count$/, () => { const seen = (S.meta || {}).inbox_seen_at || Date.now() - 3 * D;
-      return { unread: (S.events || []).filter(e => (e.actor === 'cliente' || e.actor === 'sistema') && e.at > seen).length, pending: S.bookings.filter(b => b.status === 'pending').length }; }],
+      return { unread: (S.events || []).filter(e => (e.actor === 'cliente' || e.actor === 'sistema') && e.at > seen).length, pending: S.bookings.filter(b => b.status === 'pending').length, reminders: (r => r.due ? r.unsent : 0)(remindersTomorrow()) }; }],
+    ['GET', /^\/api\/admin\/reminders$/, () => remindersTomorrow()],
     ['POST', /^\/api\/admin\/inbox\/seen$/, () => { (S.meta ||= {}).inbox_seen_at = Date.now(); return { ok: true }; }],
     ['GET', /^\/api\/admin\/export\/customers$/, () => ({ exported_at: Date.now(), count: S.customers.length, customers: S.customers.slice().sort((a, b) => a.name.localeCompare(b.name, 'pt')).map(c => { const x = custStats(c);
       return { id: c.id, name: c.name, phone: c.phone, email: c.email || '', birthday: c.birthday || '', birthday_consent: !!c.birthday_consent, marketing_consent: !!c.marketing_consent, created_at: c.created_at,
@@ -976,7 +989,7 @@
     reset() { const te = S.textEdits; try { localStorage.removeItem(KEY); } catch { /* */ } S = seed(); S.textEdits = te || {}; dirty = true; save(); },
     jobs: () => { jobs(); save(); },
     state: () => S,
-    load(st) { if (st && st.settings) { S = st; migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); jobs(); save(); } },
+    load(st) { if (st && st.settings) { S = st; migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); migrate23(); migrate24(); migrate25(); migrate26(); jobs(); save(); } },
     setField(kind, id, field, v) {
       const list = kind === 'cat' ? S.categories : S.services, x = list.find(e => e.id === +id);
       if (x && field in x) { x[field] = v; if (kind === 'svc' && field === 'name') S.bookings.forEach(b => { if (b.service_id === x.id && b.start_at > Date.now() && ACTIVE(b)) b.service_name = v; }); dirty = true; save(); }

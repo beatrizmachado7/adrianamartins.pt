@@ -31,7 +31,7 @@
       ${b.proposed ? `<div class="card" style="margin-bottom:16px;border-color:#e7c88f"><h3 style="margin-top:0">Proposta de novo horário</h3>
           <p>O horário que pediste não estava disponível. Proponho-te <strong>${fmt.dateTime(b.start)}</strong> — fica reservado para ti até ${fmt.dateTime(b.hold_expires_at)}.</p>
           <div class="actions-row"><button class="btn" id="p-yes">Aceitar este horário</button><button class="btn secondary" id="p-no">Não me dá jeito</button></div><div id="p-msg" role="alert"></div></div>`
-        : b.status === 'pending' ? `<div class="notice" style="margin-bottom:16px">O teu pedido aguarda confirmação. O horário está reservado para ti até ${fmt.dateTime(b.hold_expires_at)}.</div>` : ''}
+        : b.status === 'pending' ? `<div class="notice" style="margin-bottom:16px">A tua marcação aguarda confirmação. O horário está reservado para ti até ${fmt.dateTime(b.hold_expires_at)}.</div>` : ''}
       ${b.can_confirm_attendance ? (b.attendance_confirmed ? '<div class="notice ok" style="margin-bottom:16px">Presença confirmada. Até breve!</div>'
         : '<div class="card" style="margin-bottom:16px"><p style="margin:0 0 12px">Vens à marcação? Confirma a tua presença — ajuda-me a organizar a agenda.</p><button class="btn" id="attend">Confirmo a minha presença</button></div>') : ''}
       ${b.status === 'cancelled' && b.cancel_reason ? `<div class="notice info" style="margin-bottom:16px">${esc(b.cancel_reason)}</div>` : ''}

@@ -1,18 +1,94 @@
 'use strict';
-// Base de dados SQLite (ficheiro persistente) + esquema + dados iniciais com campos identificados.
+// Base de dados SQLite + esquema + dados iniciais.
+// Dois modos: ficheiro (better-sqlite3, servidor próprio/Render) ou em memória com sql.js (Netlify Functions,
+// o ficheiro fica guardado no Netlify Blobs — ver netlify/functions/api.js).
 const path = require('path');
 const fs = require('fs');
-const Database = require('better-sqlite3');
 
+const DRIVER = process.env.DB_DRIVER || 'better-sqlite3';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const DB_FILE = process.env.DB_FILE || path.join(DATA_DIR, 'estetica.db');
 
-const db = new Database(DB_FILE);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-db.pragma('busy_timeout = 5000'); // vários processos: espera pelo bloqueio em vez de falhar
+let db;
+if (DRIVER === 'sqljs') {
+  db = require('./sqljs-db').createFacade(global.__SQLJS);
+} else {
+  const Database = require('better-sqlite' + '3'); // nome dinâmico: não é incluído no pacote do Netlify
+  db = new Database(DB_FILE);
+  db.pragma('journal_mode = ' + (process.env.DB_JOURNAL || 'WAL'));
+  db.pragma('busy_timeout = 5000'); // vários processos: espera pelo bloqueio em vez de falhar
+}
 
+const DEFAULT_SETTINGS = {
+  business_name: 'ADRIANA MARTINS',
+  hero_title: 'Um momento para cuidar de ti.',
+  hero_subtitle: 'Manicure, pedicure, lash lifting e depilação a cera e a laser, em Massamá. Marca o teu próximo momento de bem-estar.',
+  legal_id: '[IDENTIFICAÇÃO DO NEGÓCIO — nome legal e NIF]',
+  access_info: '',          // estacionamento e acesso (só quando fornecido)
+  address_line: 'Avenida Américo Ferrer Lopes Loja 11C', postal_code: '2745-715', city: 'Massamá',
+  phone: '939 907 962', email: 'amartinsestetica@icloud.com', whatsapp: '939 907 962', instagram: 'https://www.instagram.com/estetica_adrianamartins/',
+  map_embed_url: '', map_link_url: '',
+  professional_name: 'Adriana Martins',
+  about_text: 'Sou a Adriana Martins, esteticista. O meu objetivo é ajudar cada cliente a sentir-se bem consigo, através de cuidados que valorizam a sua beleza natural. Acredito num atendimento próximo e atento, onde há espaço para ouvir as suas necessidades e tornar cada visita num momento de cuidado pessoal.',
+  training: [],            // apenas formação fornecida pela esteticista
+  experience_text: '',     // idem
+  // "Como decorre a primeira visita" (página O espaço)
+  experience_steps: [
+    { title: 'Conversa inicial', text: 'Começo com alguns minutos para perceber o que procuras e se há algo a ter em conta.' },
+    { title: 'O atendimento', text: 'Explico cada passo antes de começar e ajusto o que for preciso para te sentires confortável.' },
+    { title: 'Antes de sair', text: 'Partilho cuidados simples para os dias seguintes, quando se aplicam.' }
+  ],
+  // fotografias (URL). Vazio = espaço reservado elegante com a indicação [FOTOGRAFIA]
+  testimonials: ["Lash Lifting | Mais uma vez obrigada! Gostei imenso de como as minhas pestanas ficaram 💗 Nunca as tinha visto tão curvadas e tão bonitas!! Obrigada 🫶 Ficaram incríveis!", "Lash Lifting | Adri, as minhas pestanas com o lifting ficaram lindíssimas! Mt obrigada. Até breve", "Unhas | Grande transformação!!! Belo!!!", "Unhas | Com a melhor, tudo se torna tão simples ❤️", "Unhas | Incrível Adriana, parabéns 👏👏", "Unhas | Maravilhosass"],
+  logo_image: '/assets/img/logo-am.webp', profile_image: '', facebook: '', tiktok: '',
+  space_title: 'Um espaço pensado para ti', space_text: 'Em Massamá, preparei um espaço calmo e acolhedor, em tons claros de bege e madeira, onde cada detalhe foi escolhido para te sentires à vontade. Tem uma zona de atendimento confortável, um cantinho de espera para relaxares e material profissional, tratado com todo o cuidado de higiene. O atendimento é só por marcação, para que cada visita seja tranquila e sem pressas.', space_image: '/assets/img/espaco-logo.webp', space_points: ['Atendimento só por marcação, sem esperas', 'Ambiente calmo, luminoso e reservado', 'Material profissional e cuidado com a higiene em cada atendimento', 'Na Avenida Américo Ferrer Lopes, em Massamá'],
+  hero_image: '/assets/img/hero-adriana.webp', hero_image_2: '', hero_image_3: '', about_image: '/assets/img/adriana.webp', about_image_2: '',
+  services_image: '', pricing_image: '', booking_image: '', reviews_image: '', contacts_image: '', gallery: ['/assets/img/espaco-logo.webp', '/assets/img/espaco-atendimento.webp', '/assets/img/espaco-detalhe.webp', '/assets/img/espaco-espera.webp'],
+  video_url: 'https://www.instagram.com/reel/DaVIOYGsrlj/', video_file: '/assets/video/espaco.mp4', video_image: '/assets/img/video-capa.webp',
+  timezone: 'Europe/Lisbon',  // fuso horário do espaço (Portugal continental e Madeira; Açores: Atlantic/Azores)
+  slot_step_min: 60, buffer_min: 0, min_notice_hours: 24, max_advance_days: 60,
+  cancel_limit_hours: 48, reschedule_limit_hours: 48,
+  booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e envio-te a resposta por WhatsApp. Se precisar de propor outro horário, também te aviso por WhatsApp e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora com pagamento por MB WAY ou transferência bancária, peço um sinal de 50% do valor do serviço, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar: nesse caso não há sinal e pagas o valor total no dia, no espaço.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
+  cancellation_policy: 'Os cancelamentos e reagendamentos têm de ser feitos com pelo menos 48 horas de antecedência em relação à hora marcada. Podes fazê-lo através do link da tua marcação (que também te envio por WhatsApp), ou contactando-me diretamente.\n\nA menos de 48 horas da marcação já não é possível cancelar nem reagendar pelo site. Nesse caso, contacta-me o mais cedo possível por telefone.\n\nSe cancelares com pelo menos 48 horas de antecedência, devolvo o sinal ou guardo-o para uma nova marcação, como preferires. A menos de 48 horas, ou em caso de falta, o sinal não é devolvido.\n\nFaltar sem avisar impede outra cliente de usar esse horário. Em caso de faltas repetidas sem aviso, posso deixar de aceitar marcações online.',
+  pending_hold_hours: 24, waitlist_offer_minutes: 120, waitlist_max_offers: 3,
+  reminder_enabled: true, reminder_hours: 24, review_invite_delay_hours: 2,
+  // formulário de registo (link partilhado nas redes sociais) e mensagens de aniversário
+  register_enabled: true,
+  register_title: 'Regista-te',
+  register_intro: 'Deixa os teus dados uma vez: nas próximas marcações fica tudo mais rápido e, no teu aniversário, recebes uma mensagem minha.',
+  birthday_message: 'Olá {nome}, muitos parabéns! 🎂\n\nHoje o dia é todo teu e merece ser celebrado com tudo aquilo que te faz feliz. Obrigada por me deixares fazer parte dos teus momentos de cuidado — é sempre um gosto enorme receber-te.\n\nQue este novo ano te traga saúde, alegria e muitos motivos para sorrir.\n\nUm beijinho grande,\n{profissional}',
+  birthday_email_enabled: false,
+  // pagamentos: sinal para reservar + dados para MB WAY / transferência (sem pagamento automático no site)
+  deposit_enabled: true, deposit_percent: 50,
+  mbway_number: '939 907 962', iban: '', iban_name: '',
+  payment_note: 'Os restantes 50% são pagos no final do serviço.',
+  // mensagens de WhatsApp com um toque (o painel abre o WhatsApp da Adriana com o texto já escrito)
+  wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pela tua marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar a tua marcação aqui: {link}\n\nUm beijinho,\n{profissional}',
+  wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\n{sinal_texto}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
+  wa_tpl_proposed: 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}',
+  wa_tpl_cancelled: 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}',
+  wa_tpl_review: 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}',
+  wa_tpl_reminder: 'Olá {nome}! 😊 Passo só para te lembrar da tua marcação de amanhã.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nSe puderes, confirma a tua presença aqui: {link}\n\nAté amanhã!\n{profissional}',
+  reminder_wa_hour: 21,
+  wa_tpl_client: 'Olá Adriana! 😊\nAcabei de fazer uma marcação no site.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n💳 Pagamento: {pagamento}\n👤 {nome}\n\nObrigada!',
+  arrival_note: 'Chega 5 minutos antes. Se tiveres alguma dúvida sobre a preparação, contacta-me antes da visita.',
+  faq: [
+    { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome e telemóvel. Confirmo a marcação no prazo máximo de 24 horas e envio-te a confirmação por WhatsApp, com um link para gerires a marcação.' },
+    { q: 'Posso cancelar ou reagendar?', a: 'Sim, até 48 horas antes da hora marcada, pelo link privado da tua marcação (que também te envio por WhatsApp). A menos de 48 horas, contacta-me diretamente por telefone.' },
+    { q: 'O que significa "Pedido pendente de confirmação"?', a: 'Todas as marcações são confirmadas por mim. O horário fica reservado para ti e respondo no prazo máximo de 24 horas; envio-te uma mensagem por WhatsApp assim que o pedido for aceite ou se precisar de propor outro horário.' },
+    { q: 'Como me preparo para a visita?', a: 'Chega com alguns minutos de antecedência. Se o serviço exigir algum cuidado prévio, indico na descrição do serviço ou entro em contacto contigo.' },
+    { q: 'E se o horário que quero estiver ocupado?', a: 'Aparecem as alternativas mais próximas e podes entrar na lista de espera. Se surgir uma vaga compatível, envio-te um aviso com prazo para reservares.' }
+  ],
+  privacy_controller: '[RESPONSÁVEL PELO TRATAMENTO DE DADOS — nome/empresa e NIF]',
+  public_base_url: process.env.PUBLIC_BASE_URL || 'http://localhost:3000',
+  whatsapp_enabled: false, sms_enabled: false,
+  hours_confirmed: false
+};
+
+// esquema, migrações e dados iniciais (idempotente: corre ao arrancar e, no Netlify, em cada pedido)
+function init() {
+db.pragma('foreign_keys = ON');
 db.exec(`
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 
@@ -204,69 +280,6 @@ END;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_bookings_active_slot ON bookings(staff_id, start_at) WHERE status IN ('pending','confirmed');
 `);
 
-const DEFAULT_SETTINGS = {
-  business_name: 'ADRIANA MARTINS',
-  hero_title: 'Um momento para cuidar de ti.',
-  hero_subtitle: 'Manicure, pedicure, lash lifting e depilação a cera e a laser, em Massamá. Marca o teu próximo momento de bem-estar.',
-  legal_id: '[IDENTIFICAÇÃO DO NEGÓCIO — nome legal e NIF]',
-  access_info: '',          // estacionamento e acesso (só quando fornecido)
-  address_line: 'Avenida Américo Ferrer Lopes Loja 11C', postal_code: '2745-715', city: 'Massamá',
-  phone: '939 907 962', email: 'amartinsestetica@icloud.com', whatsapp: '939 907 962', instagram: 'https://www.instagram.com/estetica_adrianamartins/',
-  map_embed_url: '', map_link_url: '',
-  professional_name: 'Adriana Martins',
-  about_text: 'Sou a Adriana Martins, esteticista. O meu objetivo é ajudar cada cliente a sentir-se bem consigo, através de cuidados que valorizam a sua beleza natural. Acredito num atendimento próximo e atento, onde há espaço para ouvir as suas necessidades e tornar cada visita num momento de cuidado pessoal.',
-  training: [],            // apenas formação fornecida pela esteticista
-  experience_text: '',     // idem
-  // "Como decorre a primeira visita" (página O espaço)
-  experience_steps: [
-    { title: 'Conversa inicial', text: 'Começo com alguns minutos para perceber o que procuras e se há algo a ter em conta.' },
-    { title: 'O atendimento', text: 'Explico cada passo antes de começar e ajusto o que for preciso para te sentires confortável.' },
-    { title: 'Antes de sair', text: 'Partilho cuidados simples para os dias seguintes, quando se aplicam.' }
-  ],
-  // fotografias (URL). Vazio = espaço reservado elegante com a indicação [FOTOGRAFIA]
-  testimonials: ["Lash Lifting | Mais uma vez obrigada! Gostei imenso de como as minhas pestanas ficaram 💗 Nunca as tinha visto tão curvadas e tão bonitas!! Obrigada 🫶 Ficaram incríveis!", "Lash Lifting | Adri, as minhas pestanas com o lifting ficaram lindíssimas! Mt obrigada. Até breve", "Unhas | Grande transformação!!! Belo!!!", "Unhas | Com a melhor, tudo se torna tão simples ❤️", "Unhas | Incrível Adriana, parabéns 👏👏", "Unhas | Maravilhosass"],
-  logo_image: '/assets/img/logo-am.webp', profile_image: '', facebook: '', tiktok: '',
-  space_title: 'Um espaço pensado para ti', space_text: 'Em Massamá, preparei um espaço calmo e acolhedor, em tons claros de bege e madeira, onde cada detalhe foi escolhido para te sentires à vontade. Tem uma zona de atendimento confortável, um cantinho de espera para relaxares e material profissional, tratado com todo o cuidado de higiene. O atendimento é só por marcação, para que cada visita seja tranquila e sem pressas.', space_image: '/assets/img/espaco-logo.webp', space_points: ['Atendimento só por marcação, sem esperas', 'Ambiente calmo, luminoso e reservado', 'Material profissional e cuidado com a higiene em cada atendimento', 'Na Avenida Américo Ferrer Lopes, em Massamá'],
-  hero_image: '/assets/img/hero-adriana.webp', hero_image_2: '', hero_image_3: '', about_image: '/assets/img/adriana.webp', about_image_2: '',
-  services_image: '', pricing_image: '', booking_image: '', reviews_image: '', contacts_image: '', gallery: ['/assets/img/espaco-logo.webp', '/assets/img/espaco-atendimento.webp', '/assets/img/espaco-detalhe.webp', '/assets/img/espaco-espera.webp'],
-  video_url: 'https://www.instagram.com/reel/DaVIOYGsrlj/', video_file: '/assets/video/espaco.mp4', video_image: '/assets/img/video-capa.webp',
-  timezone: 'Europe/Lisbon',  // fuso horário do espaço (Portugal continental e Madeira; Açores: Atlantic/Azores)
-  slot_step_min: 60, buffer_min: 0, min_notice_hours: 24, max_advance_days: 60,
-  cancel_limit_hours: 48, reschedule_limit_hours: 48,
-  booking_policy: 'As marcações são feitas com antecedência, aqui no site, escolhendo um dos dias e horários disponíveis no calendário de Marcações. Só os horários que aparecem no site estão abertos para marcação; se não encontrares o horário que procuras, podes entrar na lista de espera.\n\nDepois de enviares o pedido, o horário fica reservado para ti enquanto aguardas a minha confirmação. Confirmo todas as marcações no prazo máximo de 24 horas e envio-te a resposta por WhatsApp. Se precisar de propor outro horário, também te aviso por WhatsApp e podes aceitar ou recusar a proposta.\n\nPara reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária, indicando a referência da marcação. Os restantes 50% são pagos no final do serviço. Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.\n\nPeço que chegues com 5 minutos de antecedência. Se te atrasares, avisa-me: posso ter de encurtar o serviço ou remarcar, para não atrasar as clientes seguintes.',
-  cancellation_policy: 'Os cancelamentos e reagendamentos têm de ser feitos com pelo menos 48 horas de antecedência em relação à hora marcada. Podes fazê-lo através do link da tua marcação (que também te envio por WhatsApp), ou contactando-me diretamente.\n\nA menos de 48 horas da marcação já não é possível cancelar nem reagendar pelo site. Nesse caso, contacta-me o mais cedo possível por telefone.\n\nSe cancelares com pelo menos 48 horas de antecedência, devolvo o sinal ou guardo-o para uma nova marcação, como preferires. A menos de 48 horas, ou em caso de falta, o sinal não é devolvido.\n\nFaltar sem avisar impede outra cliente de usar esse horário. Em caso de faltas repetidas sem aviso, posso deixar de aceitar marcações online.',
-  pending_hold_hours: 24, waitlist_offer_minutes: 120, waitlist_max_offers: 3,
-  reminder_enabled: true, reminder_hours: 24, review_invite_delay_hours: 2,
-  // formulário de registo (link partilhado nas redes sociais) e mensagens de aniversário
-  register_enabled: true,
-  register_title: 'Regista-te',
-  register_intro: 'Deixa os teus dados uma vez: nas próximas marcações fica tudo mais rápido e, no teu aniversário, recebes uma mensagem minha.',
-  birthday_message: 'Olá {nome}, muitos parabéns! 🎂\n\nHoje o dia é todo teu e merece ser celebrado com tudo aquilo que te faz feliz. Obrigada por me deixares fazer parte dos teus momentos de cuidado — é sempre um gosto enorme receber-te.\n\nQue este novo ano te traga saúde, alegria e muitos motivos para sorrir.\n\nUm beijinho grande,\n{profissional}',
-  birthday_email_enabled: false,
-  // pagamentos: sinal para reservar + dados para MB WAY / transferência (sem pagamento automático no site)
-  deposit_enabled: true, deposit_percent: 50,
-  mbway_number: '939 907 962', iban: '', iban_name: '',
-  payment_note: 'Os restantes 50% são pagos no final do serviço.',
-  // mensagens de WhatsApp com um toque (o painel abre o WhatsApp da Adriana com o texto já escrito)
-  wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pelo teu pedido de marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar o teu pedido aqui: {link}\n\nUm beijinho,\n{profissional}',
-  wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
-  wa_tpl_proposed: 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}',
-  wa_tpl_cancelled: 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}',
-  wa_tpl_review: 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}',
-  wa_tpl_reminder: 'Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}',
-  arrival_note: 'Chega 5 minutos antes. Se tiveres alguma dúvida sobre a preparação, contacta-me antes da visita.',
-  faq: [
-    { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome e telemóvel. Confirmo a marcação no prazo máximo de 24 horas e envio-te a confirmação por WhatsApp, com um link para gerires a marcação.' },
-    { q: 'Posso cancelar ou reagendar?', a: 'Sim, até 48 horas antes da hora marcada, pelo link privado da tua marcação (que também te envio por WhatsApp). A menos de 48 horas, contacta-me diretamente por telefone.' },
-    { q: 'O que significa "Pedido pendente de confirmação"?', a: 'Todas as marcações são confirmadas por mim. O horário fica reservado para ti e respondo no prazo máximo de 24 horas; envio-te uma mensagem por WhatsApp assim que o pedido for aceite ou se precisar de propor outro horário.' },
-    { q: 'Como me preparo para a visita?', a: 'Chega com alguns minutos de antecedência. Se o serviço exigir algum cuidado prévio, indico na descrição do serviço ou entro em contacto contigo.' },
-    { q: 'E se o horário que quero estiver ocupado?', a: 'Aparecem as alternativas mais próximas e podes entrar na lista de espera. Se surgir uma vaga compatível, envio-te um aviso com prazo para reservares.' }
-  ],
-  privacy_controller: '[RESPONSÁVEL PELO TRATAMENTO DE DADOS — nome/empresa e NIF]',
-  public_base_url: process.env.PUBLIC_BASE_URL || 'http://localhost:3000',
-  whatsapp_enabled: false, sms_enabled: false,
-  hours_confirmed: false
-};
 
 // textos predefinidos atualizados (outubro 2026): se a Adriana ainda tinha o texto antigo guardado sem alterações, passa a usar o novo
 {
@@ -290,6 +303,24 @@ const DEFAULT_SETTINGS = {
   for (const k of ['booking_policy', 'cancellation_policy', 'faq']) del.run(k, JSON.stringify(k === 'faq' ? DEFAULT_SETTINGS.faq.map(f => ({ q: f.q, a: old(f.a) })) : old(DEFAULT_SETTINGS[k])));
 }
 
+// mensagem "Pedido confirmado" passou a incluir o estado do sinal
+db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_confirmed', JSON.stringify('Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}'));
+
+// "pedido" passou a "marcação" nas mensagens (outubro 2026)
+db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_pending', JSON.stringify('Olá {nome}! 😊 Obrigada pelo teu pedido de marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar o teu pedido aqui: {link}\n\nUm beijinho,\n{profissional}'));
+
+// lembrete por WhatsApp na véspera, às 21h (outubro 2026)
+db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_reminder', JSON.stringify('Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}'));
+
+// em mão = sem sinal (outubro 2026): a política antiga, se não tiver sido alterada, passa à nova
+db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('booking_policy', JSON.stringify(DEFAULT_SETTINGS.booking_policy.split('Se preferires pagar em mão, escolhe essa opção ao marcar: nesse caso não há sinal e pagas o valor total no dia, no espaço.').join('Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.').split('Para reservar o dia e a hora com pagamento por MB WAY ou transferência bancária, peço um sinal de 50% do valor do serviço').join('Para reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária')));
+
+if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='bookings'").get())
+  db.prepare("UPDATE bookings SET deposit_cents=NULL WHERE payment_method='mao' AND status IN ('pending','confirmed') AND deposit_cents IS NOT NULL").run();
+
+seed();
+}
+
 function getSettings() {
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const s = { ...DEFAULT_SETTINGS };
@@ -297,8 +328,8 @@ function getSettings() {
   if (process.env.PUBLIC_BASE_URL) s.public_base_url = process.env.PUBLIC_BASE_URL;
   return s;
 }
-const upsertSetting = db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
 function saveSettings(obj) {
+  const upsertSetting = db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
   const tx = db.transaction(o => { for (const [k, v] of Object.entries(o)) if (k in DEFAULT_SETTINGS) upsertSetting.run(k, JSON.stringify(v)); });
   tx(obj);
 }
@@ -316,7 +347,7 @@ function seed() {
       bh.run(6, '10:00', '14:00');
     }
     // catálogo real (tabelas de preços enviadas) — ver src/catalogo.json (a duração não é usada: cada marcação ocupa um horário)
-    const catalogo = JSON.parse(fs.readFileSync(path.join(__dirname, 'catalogo.json'), 'utf8')).categorias;
+    const catalogo = require('./catalogo.json').categorias;
     const cat = db.prepare('INSERT INTO categories(name, description, note, sort) VALUES(?,?,?,?)');
     const sv = db.prepare(`INSERT INTO services(category_id,group_name,name,description,duration_min,price_cents,price_type,price_note,requires_approval,featured,sort,bookable,included,preparation)
       VALUES(?,?,?,?,?,?,?,'',1,?,?,?,'','')`);
@@ -332,6 +363,7 @@ function seed() {
   });
   tx();
 }
-seed();
 
-module.exports = { db, getSettings, saveSettings, DEFAULT_SETTINGS, DB_FILE };
+init();
+
+module.exports = { db, init, getSettings, saveSettings, DEFAULT_SETTINGS, DB_FILE, DRIVER };

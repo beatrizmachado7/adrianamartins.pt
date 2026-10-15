@@ -6,14 +6,20 @@ const path = require('path');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const keyFile = path.join(DATA_DIR, 'secret.key');
-let SECRET = process.env.APP_SECRET;
-if (!SECRET) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(keyFile)) fs.writeFileSync(keyFile, crypto.randomBytes(32).toString('hex'), { mode: 0o600 });
-  SECRET = fs.readFileSync(keyFile, 'utf8').trim();
+// chave secreta: APP_SECRET, ou (no Netlify) guardada na própria base de dados, ou um ficheiro em DATA_DIR
+let fileSecret = null;
+function secret() {
+  if (process.env.APP_SECRET) return process.env.APP_SECRET;
+  if (global.__APP_SECRET) return global.__APP_SECRET;
+  if (!fileSecret) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(keyFile)) fs.writeFileSync(keyFile, crypto.randomBytes(32).toString('hex'), { mode: 0o600 });
+    fileSecret = fs.readFileSync(keyFile, 'utf8').trim();
+  }
+  return fileSecret;
 }
 
-const derive = purpose => crypto.createHmac('sha256', SECRET).update(purpose).digest('base64url');
+const derive = purpose => crypto.createHmac('sha256', secret()).update(purpose).digest('base64url');
 const hash = t => crypto.createHash('sha256').update(String(t)).digest('hex');
 const random = (n = 32) => crypto.randomBytes(n).toString('base64url');
 

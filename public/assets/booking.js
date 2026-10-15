@@ -233,13 +233,16 @@
       const link = `${location.origin}/gerir.html?t=${encodeURIComponent(b.token)}`;
       const when = `${fmt.date(b.start, { weekday: undefined })}`;
       // sem email: a cliente envia o pedido à Adriana por WhatsApp (fica com a conversa aberta para o sinal e a confirmação)
-      const pay = b.payment_method ? ` Pagamento: ${S.PAY_OPTS[b.payment_method]}.` : '';
-      const waText = `Olá Adriana! Acabei de fazer um ${pending ? 'pedido de marcação' : 'marcação'} no site:\n${b.service_name}, ${fmt.dateTime(b.start)}.\nReferência: ${b.ref}.${pay}\nNome: ${st.contact.name}`;
+      // texto editável no painel (Definições → Mensagens WhatsApp); linhas sem valor (ex.: sem forma de pagamento) desaparecem
+      const V = { nome: st.contact.name, servico: b.service_name, data: fmt.date(b.start), hora: fmt.time(b.start), pagamento: b.payment_method ? S.PAY_OPTS[b.payment_method] : '', ref: b.ref };
+      const tpl = cfg.wa_tpl_client || 'Olá Adriana! 😊\nAcabei de fazer uma marcação no site.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n💳 Pagamento: {pagamento}\n👤 {nome}\n\nObrigada!';
+      const waText = tpl.split('\n').filter(l => !(l.match(/\{(\w+)\}/g) || []).some(m => (m.slice(1, -1) in V) && !V[m.slice(1, -1)]))
+        .map(l => l.replace(/\{(\w+)\}/g, (m, k) => k in V ? V[k] : m)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
       const wa = cfg.whatsapp ? S.waLink(cfg.whatsapp) + '?text=' + encodeURIComponent(waText) : '';
       return `<div class="success step">
         <div class="ok-icon">${icon(pending ? 'clock' : 'check')}</div>
         ${stateTag(pending ? 'pending' : 'confirmed')}
-        <h2>${pending ? 'Pedido recebido — aguarda confirmação' : 'Marcação confirmada'}</h2>
+        <h2>${pending ? 'Marcação recebida — aguarda confirmação' : 'Marcação confirmada'}</h2>
         <p class="lead" style="margin:0 auto 18px">${pending
           ? `Confirmo a tua marcação por WhatsApp, no máximo em 24 horas. O horário fica reservado para ti até ${fmt.dateTime(b.hold_expires_at)}.`
           : `A tua marcação está confirmada. Espero por ti no dia ${when}, às ${fmt.time(b.start)}.`}</p>
@@ -268,10 +271,10 @@
     const opts = [
       ['mbway', 'MB WAY', mb ? `Envias o sinal para o ${esc(mb)}` : 'Envio-te o número por mensagem'],
       iban && ['transferencia', 'Transferência bancária (Multibanco)', 'Por transferência para o meu IBAN'],
-      ['mao', 'Em mão', 'Pagas no espaço, em numerário']
+      ['mao', 'Em mão', 'Pagas o valor total no dia, no espaço — sem sinal']
     ].filter(Boolean);
     return `<fieldset class="pay-choice"><legend>Como preferes pagar?</legend>
-      <p>Para reservar o dia e a hora, peço um sinal de ${dep != null ? `<b>${S.eur(dep)}</b> (${pct}% do valor)` : `<b>${pct}% do valor</b> (combinamos contigo o valor)`}. Os restantes ${100 - pct}% pagas no final do serviço.</p>
+      <p>Com MB WAY${iban ? ' ou transferência' : ''}, peço um sinal de ${dep != null ? `<b>${S.eur(dep)}</b> (${pct}% do valor)` : `<b>${pct}% do valor</b> (combinamos contigo o valor)`} para reservar o dia e a hora; os restantes ${100 - pct}% pagas no final do serviço. Em mão, não há sinal: pagas tudo no dia.</p>
       <div class="pay-opts">${opts.map(([k, l, d]) => `<label class="pay-opt"><input type="radio" name="pay" value="${k}" ${st.pay === k ? 'checked' : ''}><span><b>${l}</b><small>${d}</small></span></label>`).join('')}</div>
       <p class="small" style="margin:10px 0 0">Mostro-te os dados para o pagamento a seguir.</p></fieldset>`;
   }

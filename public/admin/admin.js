@@ -72,7 +72,7 @@
   const PREF_METHOD = { mbway: 'mbway', transferencia: 'transferencia', mao: 'numerario' };
   const depositDue = b => b.deposit_cents != null && ['pending', 'confirmed'].includes(b.status) ? Math.max(0, b.deposit_cents - (b.paid_cents || 0)) : 0;
   const depTag = b => b.deposit_cents == null ? '' : (b.paid_cents || 0) >= b.deposit_cents ? '<span class="mini ok">Sinal recebido</span>'
-    : `<span class="mini warn">Sinal por receber${b.payment_method ? ' · ' + PAY_PREF[b.payment_method] : ''}</span>`;
+    : '<span class="mini warn">Sinal por receber</span>';
   const approveLabel = b => depositDue(b) ? 'Aprovar sem sinal?' : '';
   const BLOCK_TYPES = { bloqueio: 'Bloqueio pontual', pausa: 'Pausa', folga: 'Folga', ferias: 'Férias', encerramento: 'Encerramento' };
   const REMINDER = { sent: ['Lembrete enviado', 'ok'], failed: ['Lembrete falhou', 'err'], not_configured: ['Lembrete não enviado — email não configurado', 'warn'], skipped: ['Sem lembrete — cliente sem email', 'off'] };
@@ -220,7 +220,7 @@
         ${multiStaff() ? `<dt>Profissional</dt><dd>${esc(b.staff_name)}</dd>` : ''}
         <dt>Preço acordado</dt><dd>${price(b.price_cents, b.price_type)}</dd>
         <dt>Pagamento</dt><dd><select class="input mini-sel" id="b-pm" aria-label="Forma de pagamento escolhida">${[['', 'Sem indicação'], ...Object.entries(PAY_PREF)].map(([k, l]) => `<option value="${k}" ${(b.payment_method || '') === k ? 'selected' : ''}>${l}</option>`).join('')}</select></dd>
-        ${b.deposit_cents != null ? `<dt>Sinal</dt><dd>${euro(b.deposit_cents)} ${depTag(b)}</dd>` : ''}
+        ${b.deposit_cents != null ? `<dt>Sinal</dt><dd>${euro(b.deposit_cents)} ${depTag(b)}</dd>` : b.payment_method === 'mao' ? '<dt>Sinal</dt><dd><span class="mini">Sem sinal — paga tudo no espaço</span></dd>' : ''}
         ${(b.status === 'pending' || b.status === 'cancelled') && !b.paid_cents ? '' : `<dt>Pago</dt><dd>${euro(b.paid_cents)}${due > 0 && ['completed', 'no_show'].includes(b.status) ? ` <span class="mini warn">Por receber ${euro(due)}</span>` : due !== null && due <= 0 ? ' <span class="mini ok">Pago</span>' : ''}</dd>`}
         ${b.status === 'pending' ? `<dt>Reservado até</dt><dd>${b.hold_expires_at ? dt(b.hold_expires_at) : '—'}</dd>` : ''}
         ${rem ? `<dt>Lembrete</dt><dd><span class="mini ${rem[1]}">${rem[0]}</span></dd>` : ''}
@@ -260,16 +260,31 @@
 
   // WhatsApp com um toque: abre o WhatsApp da Adriana com a mensagem já escrita (ela só carrega em Enviar)
   function waBlock(b) {
-    if (!b.wa || !b.customer_phone || b.start_at < Date.now()) return '';
-    const sent = k => (b.events || []).some(e => e.action === 'WhatsApp aberto' && e.details === WA_L[k]);
-    const k = b.status === 'pending' && !b.proposed ? 'pending' : b.status === 'confirmed' ? 'confirmed' : null;
-    if (!k) return '';
-    const label = { pending: 'Pedido recebido', confirmed: 'Pedido confirmado' }[k], done = sent(k);
+    if (!b.customer_phone || b.start_at < Date.now()) return '';
+    if (b.status === 'pending' && !b.proposed) return `<div class="wa-box"><span class="wa-h">${ic('chat')}Marcação recebida — automático</span>
+      <span class="small muted">A cliente já viu no site a confirmação da marcação e os dados do sinal, e enviou-te a marcação por WhatsApp. Não precisas de enviar nada agora: aprova e envia o "Marcação confirmada".</span></div>`;
+    if (b.status !== 'confirmed' || !b.wa) return '';
+    const done = (b.events || []).some(e => e.action === 'WhatsApp aberto' && (e.details === WA_L.confirmed || e.details === 'pedido confirmado'));
     return `<div class="wa-box ${done ? '' : 'todo'}"><span class="wa-h">${ic('chat')}Enviar por WhatsApp</span>
-      <span class="small ${done ? 'muted' : ''}">${done ? `Mensagem "${label}" já enviada. Podes voltar a abri-la se precisares.` : `Avisa a cliente: mensagem <b>"${label}"</b>.`}</span>
-      <div class="wa-btns"><a class="btn tiny ${done ? 'secondary' : ''}" data-wa="${k}" href="${waHref(b.customer_phone)}?text=${encodeURIComponent(b.wa[k])}" target="_blank" rel="noopener">${ic('chat')}${label}${done ? ' ✓' : ''}</a></div></div>`;
+      <span class="small ${done ? 'muted' : ''}">${done ? 'Mensagem "Marcação confirmada" já enviada. Podes voltar a abri-la se precisares.' : 'Falta avisar a cliente: <b>"Marcação confirmada"</b>.'}</span>
+      <div class="wa-btns"><a class="btn tiny ${done ? 'secondary' : ''}" data-wa="confirmed" href="${waHref(b.customer_phone)}?text=${encodeURIComponent(b.wa.confirmed)}" target="_blank" rel="noopener">${ic('chat')}Marcação confirmada${done ? ' ✓' : ''}</a></div></div>`;
   }
-  const WA_L = { pending: 'pedido recebido', confirmed: 'pedido confirmado', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' };
+  // lembretes por WhatsApp na véspera (um toque, a partir das 21h)
+  const remRow = b => `<div class="mini-row rem-row"><span><b>${hhmm(b.start_at)}</b> · ${esc(b.customer_name)} · ${esc(b.service_name)}${b.attendance_confirmed_at ? ' <span class="mini ok">Presença confirmada</span>' : ''}</span>
+    <span class="row-actions"><a class="btn tiny ${b.wa_reminder_sent ? 'secondary' : ''}" data-rem="${b.id}" href="${waHref(b.customer_phone)}?text=${encodeURIComponent(b.wa_reminder || '')}" target="_blank" rel="noopener">${ic('chat')}${b.wa_reminder_sent ? 'Lembrete enviado ✓' : 'Enviar lembrete'}</a></span></div>`;
+  const bindRem = (root, refresh) => $$('[data-rem]', root).forEach(a => a.addEventListener('click', () => {
+    api(`/bookings/${a.dataset.rem}/wa-log`, { method: 'POST', body: { kind: 'reminder' } }).then(() => setTimeout(() => { refresh(); updateBadges(); }, 400)).catch(() => {});
+  }));
+  async function remCard(el) {
+    const r = await api('/reminders').catch(() => null);
+    if (!r || !el.isConnected) return;
+    if (!r.list.length) { el.innerHTML = ''; return; }
+    if (!r.due) { el.innerHTML = `<div class="notice slim">${ic('bell')}<span>Amanhã tens ${r.list.length} ${r.list.length === 1 ? 'marcação' : 'marcações'}. Às ${r.hour}h aparecem aqui os lembretes para enviares por WhatsApp.</span></div>`; return; }
+    el.innerHTML = `<section class="panel rem-panel ${r.unsent ? 'todo' : ''}"><h2>${ic('chat')}Lembretes de amanhã <small>${r.unsent ? r.unsent + ' por enviar' : 'todos enviados ✓'}</small></h2>
+      <p class="small muted">${longDay(r.date)} · cada botão abre o WhatsApp com a mensagem já escrita — só tens de carregar em Enviar.</p>${r.list.map(remRow).join('')}</section>`;
+    bindRem(el, () => remCard(el));
+  }
+  const WA_L = { pending: 'marcação recebida', confirmed: 'marcação confirmada', reminder: 'lembrete', proposed: 'proposta de horário', cancelled: 'aviso de cancelamento', review: 'pedido de avaliação' };
   function cancelDialog(id, refresh) {
     modal(`${head('Cancelar marcação')}<form id="cf"><div class="field"><label for="c-r">Motivo <span class="muted small">(opcional — fica no histórico)</span></label><input class="input" id="c-r" maxlength="300"></div>
       <p class="small muted">O horário fica livre de imediato para outras marcações.</p><div id="cf-msg"></div>
@@ -544,6 +559,7 @@
     $('#view').innerHTML = `
       <div class="hello"><div><h2>${greeting()}, ${esc(first)}!</h2><p>Aqui está o resumo do teu negócio · <span class="muted">${longDay(d.today)}</span></p></div></div>
       ${!d.open_days && !d.weekly_hours ? `<div class="notice slim">${ic('calendar')}<span>Ainda não abriste horários para marcação. <a href="#calendario/disponibilidade">Abrir horários</a></span></div>` : ''}
+      <div id="rem-dash"></div>
       ${d.birthdays && d.birthdays.length ? `<div class="notice slim bday-note">${ic('gift')}<span>Hoje faz anos: <b>${d.birthdays.map(b => esc(b.name)).join(', ')}</b>. <a href="#clientes/aniversarios">Enviar mensagem</a></span></div>` : ''}
       <div class="kpis five">
         <a class="kpi" href="#calendario"><span class="k-l">${ic('calendar')}Marcações de hoje</span><b>${c.today}</b><small>${c.today === 1 ? 'cliente agendada' : 'clientes agendadas'}</small></a>
@@ -565,6 +581,7 @@
       </div>`;
     const re = () => views.dashboard();
     bindBookings($('#view'), re);
+    remCard($('#rem-dash'));
     $('#q-new').onclick = () => newBooking({}, re);
     $('#q-client').onclick = () => customerForm({});
     $('#q-block').onclick = () => blockDialog({ date: today() }, re);
@@ -598,10 +615,10 @@
     $$('[data-blockat]', root).forEach(b => b.onclick = () => blockDialog({ date: isoDay(+b.dataset.blockat), time: hhmm(+b.dataset.blockat) }, refresh));
   }
   const pendingCard = b => `<div class="pend" data-booking="${b.id}" tabindex="0" role="button">
-      <div class="pend-top"><div><b>${esc(b.customer_name)}</b><span>${esc(b.service_name)}</span></div>${chip('pending')}</div>
+      <div class="pend-top"><div><b>${esc(b.customer_name)}</b>${b.created_at > Date.now() - 86400000 && b.source !== 'admin' ? ' <span class="mini new">Novo</span>' : ''}<span>${esc(b.service_name)}</span></div>${chip('pending')}</div>
       <div class="pend-when">${ic('calendar')}${shortDay(isoDay(b.start_at))} · <b>${hhmm(b.start_at)}</b>${b.proposed ? ' <span class="mini warn">Sugerido por ti — aguarda a cliente</span>' : ''}</div>
       <div class="pend-meta">${esc(b.customer_phone)}${b.hold_expires_at ? ` · reservado até ${dt(b.hold_expires_at)}` : ''}</div>
-      ${b.deposit_cents != null || b.payment_method ? `<div class="pend-pay">${depTag(b)}${b.deposit_cents == null ? `<span class="mini">${PAY_PREF[b.payment_method]}</span>` : ''}${depositDue(b) ? `<button class="link-btn" data-dep="${b.id}">Registar sinal</button>` : ''}</div>` : ''}
+      ${b.deposit_cents != null || b.payment_method ? `<div class="pend-pay"><span class="pay-pref">Pagamento: <b>${PAY_PREF[b.payment_method] || 'sem indicação'}</b></span>${b.payment_method === 'mao' ? '<span class="mini">Sem sinal</span>' : depTag(b)}${depositDue(b) ? `<button class="link-btn" data-dep="${b.id}">Registar sinal</button>` : ''}</div>` : ''}
       <div class="row-actions"><button class="btn tiny" data-approve="${b.id}" ${depositDue(b) ? 'data-nodep="1"' : ''}>${ic('check')}Aprovar</button><button class="btn tiny secondary" data-suggest="${b.id}">Sugerir outro horário</button><button class="btn tiny ghost-err" data-reject="${b.id}">Recusar</button></div></div>`;
 
   // ---------- MARCAÇÕES (lista, pedidos, lista de espera) ----------
@@ -821,7 +838,7 @@
     });
   }
   AG.pedidos = async body => {
-    const list = await api('/bookings?status=pending');
+    const list = (await api('/bookings?status=pending')).sort((x, y) => y.created_at - x.created_at);
     if (!(typeof body !== 'undefined' ? body : $('#view')).isConnected) return;
     body.innerHTML = `<p class="small muted">Pedidos feitos pelo site (e marcações que criaste como pendentes). Ao aprovar, o horário é verificado de novo; depois envia a confirmação à cliente pelo botão WhatsApp da marcação. Em vez de recusar, podes sugerir outro horário.</p>
       ${list.length ? `<div class="pend-grid">${list.map(pendingCard).join('')}</div>` : empty('Não há pedidos por confirmar.')}`;
@@ -1395,14 +1412,17 @@
             <p class="small muted" style="margin:0">As mensagens às clientes saem do teu WhatsApp, com um toque: em cada marcação, o botão <b>Enviar por WhatsApp</b> abre a conversa com o texto já escrito (com o link da marcação e os dados do sinal) e só tens de carregar em Enviar.
             Cada mensagem aberta fica registada no histórico da marcação.</p></section>
           <form id="waf" class="panel"><h2>Mensagens de WhatsApp</h2>
-            <p class="small muted">Cada mensagem abre o teu WhatsApp já escrita — só tens de carregar em Enviar.</p>
-            <div class="wa-tpl"><div class="field"><label for="w-p">1 · Pedido recebido</label><span class="hint">Botão na marcação, enquanto o pedido está pendente. Leva os dados do sinal e o link da marcação.</span><textarea class="input" id="w-p" name="wa_tpl_pending" rows="7">${esc(s.wa_tpl_pending)}</textarea></div>
-              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-p"></p></div></div>
-            <div class="wa-tpl"><div class="field"><label for="w-c">2 · Pedido confirmado</label><span class="hint">Botão na marcação, depois de aprovares o pedido.</span><textarea class="input" id="w-c" name="wa_tpl_confirmed" rows="7">${esc(s.wa_tpl_confirmed)}</textarea></div>
+            <p class="small muted">Cada mensagem abre o teu WhatsApp já escrita — só tens de carregar em Enviar. A <b>marcação recebida é automática</b>: no fim da marcação a cliente vê no site a confirmação e os dados do sinal, e envia-te a marcação por WhatsApp.</p>
+            <div class="wa-tpl"><div class="field"><label for="w-k">Ao marcar · mensagem que a cliente te envia</label><span class="hint">No fim da marcação no site, a cliente carrega em "Enviar por WhatsApp" e esta mensagem vai para ti. Podes usar <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{pagamento}</code> <code>{nome}</code> (nome completo); se a cliente não escolher pagamento, essa linha não aparece.</span><textarea class="input" id="w-k" name="wa_tpl_client" rows="8" maxlength="800">${esc(s.wa_tpl_client || '')}</textarea></div>
+              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-k"></p></div></div>
+            <div class="wa-tpl"><div class="field"><label for="w-c">1 · Marcação confirmada</label><span class="hint">Botão na marcação, depois de a aprovares.</span><textarea class="input" id="w-c" name="wa_tpl_confirmed" rows="7">${esc(s.wa_tpl_confirmed)}</textarea></div>
               <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-c"></p></div></div>
+            <div class="wa-tpl"><div class="field"><label for="w-r">2 · Lembrete (véspera)</label><span class="hint">No dia anterior, a partir da hora escolhida, aparece no Dashboard a lista "Lembretes de amanhã" com um botão por cliente.</span><textarea class="input" id="w-r" name="wa_tpl_reminder" rows="8">${esc(s.wa_tpl_reminder)}</textarea>
+              <label class="small" for="w-rh" style="margin-top:8px;display:block">Hora do lembrete</label><select class="input" id="w-rh" name="reminder_wa_hour" style="max-width:140px">${[...new Set([17, 18, 19, 20, 21, 22, 23, Number(s.reminder_wa_hour || 21)])].sort((x, y) => x - y).map(h => `<option value="${h}" ${Number(s.reminder_wa_hour || 21) === h ? 'selected' : ''}>${h}h</option>`).join('')}</select></div>
+              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-r"></p></div></div>
             <div class="wa-tpl"><div class="field"><label for="w-b">3 · Mensagem de aniversário</label><span class="hint">Botão em Clientes → Aniversários e no Dashboard, no dia de anos da cliente.</span><textarea class="input" id="w-b" name="birthday_message" rows="9" maxlength="800">${esc(s.birthday_message)}</textarea></div>
               <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-b"></p></div></div>
-            <p class="small muted">Podes usar: <code>{nome}</code> primeiro nome · <code>{profissional}</code> o teu nome · nas mensagens 1 e 2 também <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{sinal_texto}</code> (instruções do sinal) <code>{ref}</code> <code>{link}</code> (link da marcação) <code>{morada}</code>.</p>
+            <p class="small muted">Podes usar: <code>{nome}</code> primeiro nome · <code>{profissional}</code> o teu nome · nas mensagens 1 e 2 também <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{ref}</code> <code>{link}</code> (link da marcação) <code>{morada}</code> <code>{sinal_texto}</code> (sinal recebido ou por receber).</p>
             <button class="btn">Guardar mensagens</button></form>
           <section class="panel"><h2>Próximas marcações — presença</h2><div id="rem-list"><div class="spinner"></div></div></section>`;
         const list = await api(`/bookings?status=confirmed&from=${today()}&to=${addDays(today(), 7)}`);
@@ -1417,9 +1437,9 @@
           await api('/settings', { method: 'PUT', body: out }); Object.assign(s, out); toast('Mensagens guardadas');
         });
         const EX = { nome: 'Ana', profissional: s.professional_name || s.business_name, servico: 'Verniz Gel', data: 'sábado, 17 de outubro', hora: '10:00', ref: 'AB12CD', link: (s.public_base_url || '') + '/gerir.html?t=…',
-          morada: `${s.address_line}, ${s.postal_code} ${s.city}`, sinal: '9,00 €', sinal_texto: `Para reservar, peço um sinal de 9,00 € por MB WAY para o ${s.mbway_number}, com a referência AB12CD na descrição. Assim que receber, confirmo a tua marcação.` };
-        const fillEx = t => t.replace(/\{(\w+)\}/g, (m, k) => k in EX ? EX[k] : m).replace(/\n{3,}/g, '\n\n').trim();
-        $$('[data-prev]', body).forEach(p => { const ta = $('#' + p.dataset.prev, body); const up = () => { p.textContent = fillEx(ta.value); }; ta.addEventListener('input', up); up(); });
+          morada: `${s.address_line}, ${s.postal_code} ${s.city}`, sinal: '9,00 €', pagamento: 'Em mão (no espaço)', sinal_texto: `Para reservar, peço um sinal de 9,00 € por MB WAY para o ${s.mbway_number}, com a referência AB12CD na descrição. Assim que receber, confirmo a tua marcação.` };
+        const fillEx = (t, X = EX) => t.replace(/\{(\w+)\}/g, (m, k) => k in X ? X[k] : m).replace(/\n{3,}/g, '\n\n').trim();
+        $$('[data-prev]', body).forEach(p => { const ta = $('#' + p.dataset.prev, body); const up = () => { p.textContent = fillEx(ta.value, p.dataset.prev === 'w-k' ? { ...EX, nome: 'Ana Silva' } : EX); }; ta.addEventListener('input', up); up(); });
       },
       pagamentos: async () => {
         body.innerHTML = `<form id="sf" class="panel"><h2>Pagamentos e sinal</h2>
@@ -1601,11 +1621,9 @@
       bindBookings(body, () => views.notificacoes('atividade'));
       if (d.unread) api('/inbox/seen', { method: 'POST', body: {} }).then(updateBadges).catch(() => {});
     } else if (nt.tab === 'amanha') {
-      body.innerHTML = `<p class="small muted">Marcações confirmadas para ${longDay(d.tomorrow_date)}. <a href="#definicoes/lembretes">Editar mensagens</a></p>
-        ${d.tomorrow.length ? d.tomorrow.map(b => `<div class="mini-row click" data-booking="${b.id}" tabindex="0" role="button"><span><b>${hhmm(b.start_at)}</b> · ${esc(b.customer_name)} · ${esc(b.service_name)}<br>
-          <span class="small">${b.reminder_status ? `<span class="mini ${REMINDER[b.reminder_status][1]}">${REMINDER[b.reminder_status][0]}</span>` : '<span class="mini off">Lembrete por enviar</span>'} ${b.attendance_confirmed_at ? '<span class="mini ok">Presença confirmada</span>' : ''}</span></span>
-          <span class="row-actions"><span class="mini off">Abrir a marcação</span></span></div>`).join('') : empty('Sem marcações confirmadas para amanhã.')}`;
-      bindBookings(body, () => views.notificacoes('amanha'));
+      body.innerHTML = `<p class="small muted">Marcações confirmadas para ${longDay(d.tomorrow_date)}. ${d.reminder_due ? 'Envia o lembrete a cada cliente com um toque.' : `Os lembretes ficam destacados a partir das ${d.reminder_hour}h (também no Dashboard).`} <a href="#definicoes/lembretes">Editar mensagem</a></p>
+        ${d.tomorrow.length ? d.tomorrow.map(remRow).join('') : empty('Sem marcações confirmadas para amanhã.')}`;
+      bindRem(body, () => views.notificacoes('amanha'));
     } else {
       const ST = { sent: ['Enviado', 'ok'], failed: ['Falhou', 'err'], not_configured: ['Não enviado — email não configurado', 'warn'], skipped: ['Não enviado — cliente sem email', 'off'] };
       body.innerHTML = `<p class="small muted">Registo real de cada mensagem: nada é marcado como enviado se não tiver sido. ${d.integrations.email ? 'O email está configurado.' : '<b>O email ainda não está configurado</b> — <a href="#definicoes/lembretes">ver o que falta</a>.'}</p>
@@ -1618,8 +1636,8 @@
   const NAV = [['dashboard', 'Dashboard', 'home'], ['marcacoes', 'Marcações', 'list'], ['calendario', 'Calendário', 'calendar'], ['clientes', 'Clientes', 'users'], ['servicos', 'Serviços', 'sparkle'],
     ['financeiro', 'Financeiro', 'euro'], ['avaliacoes', 'Avaliações', 'star'], ['notificacoes', 'Notificações', 'bell'], ['definicoes', 'Definições', 'gear']];
   const TAB_MAIN = ['dashboard', 'marcacoes', 'calendario', 'clientes'];
-  const counts = { pending: 0, unread: 0 };
-  const badgeOf = k => k === 'marcacoes' && counts.pending ? `<span class="badge" aria-label="${counts.pending} pedidos pendentes">${counts.pending}</span>`
+  const counts = { pending: 0, unread: 0, reminders: 0 };
+  const badgeOf = k => k === 'dashboard' && counts.reminders ? `<span class="badge" aria-label="${counts.reminders} lembretes por enviar">${counts.reminders}</span>` : k === 'marcacoes' && counts.pending ? `<span class="badge" aria-label="${counts.pending} pedidos pendentes">${counts.pending}</span>`
     : k === 'notificacoes' && counts.unread ? `<span class="badge" aria-label="${counts.unread} notificações novas">${counts.unread}</span>` : '';
   let curView = 'dashboard';
   function menu(cur) {
@@ -1632,7 +1650,7 @@
         <a href="/" target="_blank" rel="noopener">${ic('ext')}<span>Ver o site</span></a><button type="button" class="more-out" id="mm-out">${ic('out')}<span>Terminar sessão</span></button></nav>`, b => { $('#mm-out', b).onclick = logout; });
   }
   async function updateBadges() {
-    try { const c = await api('/inbox/count'); if (c.pending !== counts.pending || c.unread !== counts.unread) { Object.assign(counts, c); menu(curView); } } catch { /* sem ligação */ }
+    try { const c = await api('/inbox/count'); if (c.pending !== counts.pending || c.unread !== counts.unread || (c.reminders || 0) !== counts.reminders) { c.reminders = c.reminders || 0; Object.assign(counts, c); menu(curView); } } catch { /* sem ligação */ }
   }
   function paintSide() {
     const s = cache.settings || {}, st = (cache.staff || [])[0] || {};

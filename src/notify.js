@@ -62,7 +62,7 @@ function paymentText(b, s) {
   const ref = `na descrição, indica a referência ${b.ref}`;
   const mb = String(s.mbway_number || '').trim(), iban = String(s.iban || '').trim();
   let how;
-  if (b.payment_method === 'mao') how = `Escolheste pagar em mão: combinamos contigo a entrega do sinal no espaço.`;
+  if (b.payment_method === 'mao') return `Pagamento em mão: pagas o valor total no dia, no espaço (sem sinal).`;
   else if (b.payment_method === 'transferencia' && iban) how = `Transferência bancária para o IBAN ${iban}${s.iban_name ? ' (' + s.iban_name + ')' : ''} — ${ref}.`;
   else how = [mb && `MB WAY para o número ${mb} — ${ref}.`, iban && `Ou transferência bancária para o IBAN ${iban}${s.iban_name ? ' (' + s.iban_name + ')' : ''}.`].filter(Boolean).join('\n');
   return `Pagamento: para reservar o dia e a hora peço ${amount}.\n${how}${s.payment_note ? '\n' + s.payment_note : ''}`;
@@ -167,8 +167,10 @@ function waMessages(b, manageUrl, reviewUrl = '') {
   let sinal = '';
   if (s.deposit_enabled) {
     const v = dep != null ? eur(dep) : `${s.deposit_percent}% do valor`;
-    if (dep != null && paid >= dep) sinal = 'Já recebi o teu sinal, obrigada!';
-    else if (b.payment_method === 'mao') sinal = `Combinamos a entrega do sinal (${v}) aqui no espaço.`;
+    if (b.payment_method === 'mao') sinal = `Pagamento em mão: pagas o valor total${b.price_cents != null ? ' (' + eur(b.price_cents) + ')' : ''} no dia, no espaço. Não precisas de pagar sinal.`;
+    else if (dep != null && paid >= dep) sinal = 'Já recebi o teu sinal, obrigada!';
+    else if (b.status === 'confirmed' && b.payment_method !== 'mao' && (mb || iban)) sinal = b.payment_method === 'transferencia' && iban ? `Falta só o sinal de ${v}, por transferência para o IBAN ${iban} (referência ${b.ref}).` : `Falta só o sinal de ${v}, por MB WAY para o ${mb} (referência ${b.ref}).`;
+    else if (b.payment_method === 'mao') sinal = b.status === 'confirmed' ? `Pagamento em mão, no espaço (sinal de ${v}).` : `Combinamos a entrega do sinal (${v}) aqui no espaço.`;
     else if (b.payment_method === 'transferencia' && iban) sinal = `Para reservar, peço um sinal de ${v} por transferência para o IBAN ${iban}${s.iban_name ? ' (' + s.iban_name + ')' : ''}, com a referência ${b.ref}.`;
     else if (mb) sinal = `Para reservar, peço um sinal de ${v} por MB WAY para o ${mb}, com a referência ${b.ref} na descrição. Assim que receber, confirmo a tua marcação.`;
   }

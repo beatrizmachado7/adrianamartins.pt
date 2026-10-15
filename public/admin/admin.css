@@ -598,3 +598,14 @@ code { font-size: .85em; background: var(--cream); border: 1px solid var(--line)
 .wa-prev { background: #e7f6ec; border-radius: 14px; padding: 12px 14px; margin-top: 26px; }
 .wa-prev p { white-space: pre-line; margin: 6px 0 0; font-size: .9rem; line-height: 1.45; color: #1f2b22; }
 @media (max-width: 760px) { .wa-tpl { grid-template-columns: 1fr; } .wa-prev { margin-top: 0; } }
+.pend .mini.new, .mini.new { background: #1f8f5a !important; color: #fff !important; border-color: #1f8f5a !important; }
+.pend-pay .pay-pref { font-size: .86rem; flex-basis: 100%; }
+
+/* v28 — lembretes por WhatsApp na véspera */
+.rem-panel { margin-bottom: 16px; }
+.rem-panel h2 { display: flex; align-items: center; gap: 8px; }
+.rem-panel h2 small { margin-left: auto; font-weight: 500; }
+.rem-panel.todo { border-color: #25a36a; background: #effaf3; }
+.rem-panel.todo .btn:not(.secondary), .rem-row .btn:not(.secondary) { background: #1f8f5a; border-color: #1f8f5a; color: #fff; }
+.rem-row .row-actions .btn { white-space: nowrap; }
+.rem-row .btn.secondary, .rem-row .btn.secondary:hover { background: #fff; color: #1f8f5a; border-color: #9ed3b6; }

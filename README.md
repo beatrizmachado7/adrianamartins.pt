@@ -100,7 +100,7 @@ Faça uma cópia de segurança antes de atualizar: `sqlite3 data/estetica.db ".b
 | `APP_SECRET` | Chave para os links privados (opcional; se não existir é gerada em `data/secret.key`) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Envio de email |
 | `NODE_ENV=production` | Cookie de sessão só por HTTPS |
-| `TRUST_PROXY=true` | Se estiver atrás de um proxy (Render, Railway, Nginx) |
+| `TRUST_PROXY=true` | Se estiver atrás de um proxy (Netlify, Render, Nginx) |
 | `JOBS=off` | Desliga as tarefas automáticas (só para testes) |
 | `BACKUPS=off`, `BACKUP_DIR`, `BACKUP_KEEP` | Cópias de segurança diárias (ligadas por defeito, em `data/backups`, guardam as últimas 14) |
 
@@ -132,16 +132,26 @@ Lembretes: ativos por defeito, enviados 24 h antes ("na véspera"), com link par
 
 Exigem um fornecedor pago (WhatsApp Business Platform/Cloud API, Twilio, etc.) e aprovação de modelos de mensagem. O dashboard mostra-os como "Não incluído". O site e o dashboard têm apenas ligações "WhatsApp" que abrem a conversa no telemóvel (não enviam nada sozinhos).
 
-## Publicar
+## Publicar (Netlify, gratuito — opção principal)
 
-Precisa de um alojamento Node **com disco persistente** (a base de dados é um ficheiro SQLite). Netlify/Vercel sozinhos não servem, porque não guardam ficheiros entre pedidos.
+Tudo corre no Netlify: as páginas (pasta `public`), o servidor como **Netlify Function** (`netlify/functions/api.js`) e os dados no **Netlify Blobs** (base de dados SQLite e fotografias). Não é preciso Render nem outra conta.
 
-**Render (recomendado, já preparado):** o repositório inclui `Dockerfile` e `render.yaml`.
-1. Pôr o projeto num repositório GitHub (sem `node_modules` nem `data`).
-2. No Render: *New + → Blueprint* → escolher o repositório. Cria o serviço com um disco de 1 GB em `/data`.
-3. Preencher as variáveis `PUBLIC_BASE_URL` (o domínio) e, quando houver, as `SMTP_*`.
-4. Conta do painel: o `render.yaml` já traz `ADMIN_EMAIL` (email da Adriana); preencher `ADMIN_PASSWORD` no Render antes do primeiro arranque. A conta é criada automaticamente na primeira vez e, a partir daí, a palavra-passe muda-se no painel (Definições → Conta). Alternativa: `npm run criar-admin` na *Shell* do serviço.
-5. Em *Settings → Custom Domains*, adicionar o domínio e apontar o DNS (o HTTPS é automático).
+1. Pôr o projeto no GitHub (sem `node_modules` nem `data`).
+2. Netlify → *Add new site → Import from GitHub*. O `netlify.toml` já configura tudo (pasta `public`, funções, redirecionamentos).
+3. *Site configuration → Environment variables*:
+   - `ADMIN_EMAIL` = email da Adriana
+   - `ADMIN_PASSWORD` = palavra-passe do painel (mín. 10 caracteres; só é usada para criar a conta na primeira vez — depois muda-se no painel)
+   - `PUBLIC_BASE_URL` = `https://adrianamartins.netlify.app` (ou o domínio)
+4. *Deploys → Trigger deploy → Clear cache and deploy site*.
+5. Testar: abrir `/painel`, entrar, abrir horários, fazer uma marcação de teste no site.
+
+Como funciona: em cada pedido, a função carrega a base de dados do Blobs, responde e, se algo mudou, guarda-a com escrita condicional (se outra pessoa marcou ao mesmo tempo, repete com os dados novos — nunca há duas marcações na mesma hora). A função agendada `tarefas` corre de 15 em 15 minutos (pedidos que expiram, lista de espera) e guarda uma cópia diária da base de dados no Blobs (`copias/AAAA-MM-DD.sqlite`, últimas 14).
+
+Limites: vídeos carregados no painel até ~5 MB (fotografias sem problema). Para testar localmente como no Netlify: `npm run netlify:local`.
+
+## Alternativa: servidor Node com disco (Render ou VPS)
+
+**Render:** o repositório inclui `Dockerfile` e `render.yaml` (New → Blueprint, disco de 1 GB em `/data`, preencher `ADMIN_PASSWORD` e `PUBLIC_BASE_URL`).
 
 **VPS:** `docker build -t estetica . && docker run -d -p 3000:3000 -v /srv/estetica:/data --restart unless-stopped estetica`, com Nginx/Caddy à frente para o HTTPS.
 
@@ -164,24 +174,13 @@ Recolhe apenas nome, telefone e email (opcional no dashboard); sem dados clínic
 `node demo/build.js` gera `demo/dist/demo.html`: o mesmo site e dashboard num único ficheiro, com a API simulada no browser. As clientes de exemplo estão identificadas como "Demo" (ex.: "Ana Demo"); nada é enviado nem chega a um servidor. Entrar no dashboard: `demo@exemplo.pt` / `demonstracao`.
 
 
-## Publicar com Netlify (páginas) + Render (servidor)
+## Modo sem ligação
 
-O Netlify só serve páginas fixas; as marcações, o painel e a base de dados precisam do servidor no Render.
-
-1. **Render primeiro:** New → Blueprint → este repositório. Preenche `ADMIN_PASSWORD` e `PUBLIC_BASE_URL` (o endereço do Netlify ou o domínio). Copia o endereço do serviço (ex.: `https://adriana-martins-estetica.onrender.com`).
-2. **netlify.toml:** se o endereço do Render for diferente, troca `adriana-martins-estetica.onrender.com` pelo teu (5 sítios) e faz commit.
-3. **Netlify:** Add new site → Import from GitHub → este repositório. Não é preciso mudar nada: o `netlify.toml` já diz para publicar a pasta `public` sem build.
-4. O site abre pelo Netlify; tudo o que é `/api/...` é encaminhado para o Render. O painel fica em `/painel`.
-
-### Só Netlify (sem servidor, por agora)
-
-Enquanto o Render não estiver ligado, o site abre na mesma: textos, contactos, serviços e preços vêm de `public/assets/offline.json`. A página Marcações mostra "Marcações online em breve" com botões para WhatsApp e telefone, e o painel avisa que ainda não está ligado. Quando o Render estiver publicado, tudo passa a funcionar sozinho (sem mudar nada no Netlify).
-
-Se mudares serviços, preços ou textos no código antes de ligar o Render, atualiza o ficheiro com `npm run snapshot` e faz commit.
+Se a função não responder, o site abre na mesma com os textos, serviços e preços de `public/assets/offline.json` (botões de WhatsApp e telefone para marcar). Se mudares serviços, preços ou textos no código, atualiza esse ficheiro com `npm run snapshot` e faz commit.
 
 ## Comunicação só por WhatsApp (decisão de outubro 2026)
 
-O site não pede email às clientes (só nome e telemóvel) e não envia emails. O envio de email continua no código, desligado; para o ativar no futuro, basta preencher `SMTP_*` no Render.
+O site não pede email às clientes (só nome e telemóvel) e não envia emails. O envio de email continua no código, desligado; para o ativar no futuro, basta preencher `SMTP_*` nas variáveis de ambiente.
 
 - No fim da marcação, a cliente carrega em **Enviar por WhatsApp** e envia à Adriana o pedido já escrito (referência, serviço, data e forma de pagamento). É assim que a Adriana fica a saber de cada novo pedido, além do contador no painel.
 - A cliente é reconhecida nas marcações seguintes pelo telemóvel.
@@ -189,3 +188,8 @@ O site não pede email às clientes (só nome e telemóvel) e não envia emails.
 ## WhatsApp com um toque
 
 Em cada marcação o painel mostra "Enviar por WhatsApp": abre o WhatsApp da Adriana com a mensagem já escrita — pedido recebido + sinal, proposta de outro horário, confirmação, lembrete, cancelamento e pedido de avaliação (com o link). A mensagem que falta enviar fica destacada a verde e cada envio fica no histórico. Os textos editam-se em Definições → Mensagens WhatsApp. Não há envio automático por WhatsApp (isso exigiria a API paga da Meta).
+
+### Lembrete na véspera (às 21h)
+
+A partir das 21h do dia anterior (hora configurável em Definições → Mensagens WhatsApp), o Dashboard mostra **Lembretes de amanhã** com um botão por cliente e o ícone do Dashboard ganha um número com os lembretes por enviar. Um toque abre o WhatsApp com o lembrete escrito; depois de enviado fica "Lembrete enviado ✓". Também está em Notificações → Amanhã. O envio 100% automático exigiria a API oficial do WhatsApp (Meta), que não está ligada.
+

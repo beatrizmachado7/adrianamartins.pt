@@ -1,45 +1,75 @@
-# Netlify: serve as páginas do site (pasta public) e encaminha tudo o que precisa do servidor para o Render.
-# ANTES DE PUBLICAR: troca "adriana-martins-estetica.onrender.com" pelo endereço do serviço no Render
-# (no Render, a variável TRUST_PROXY deve ficar com o valor 2).
+# Netlify: páginas (pasta public) + servidor como Netlify Function (netlify/functions/api.js).
+# A base de dados e as fotografias ficam no Netlify Blobs (incluído no Netlify, sem conta extra nem custos).
+# Variáveis a definir no Netlify (Site configuration → Environment variables):
+#   ADMIN_EMAIL     = amartinsestetica@icloud.com
+#   ADMIN_PASSWORD  = palavra-passe do painel (mín. 10 caracteres; só é usada para criar a conta na 1.ª vez)
+#   PUBLIC_BASE_URL = https://adrianamartins.netlify.app   (ou o domínio, quando houver)
 [build]
   publish = "public"
   command = ""
 
-# servidor (marcações, painel, horários, emails) — corre no Render
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # o better-sqlite3 só é usado fora do Netlify; aqui usa-se o sql.js (incluído no pacote da função)
+  included_files = ["!node_modules/better-sqlite3/**", "!node_modules/node-addon-api/**", "!node_modules/bindings/**", "!node_modules/prebuild-install/**"]
+
+# tarefas automáticas (pedidos que expiram, lista de espera) + cópia de segurança diária
+[functions."tarefas"]
+  schedule = "*/15 * * * *"
+
+# servidor: marcações, painel, horários, fotografias carregadas no painel
 [[redirects]]
   from = "/api/*"
-  to = "https://adriana-martins-estetica.onrender.com/api/:splat"
+  to = "/.netlify/functions/api/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/uploads/*"
-  to = "https://adriana-martins-estetica.onrender.com/uploads/:splat"
+  to = "/.netlify/functions/api/uploads/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/sitemap.xml"
-  to = "https://adriana-martins-estetica.onrender.com/sitemap.xml"
+  to = "/.netlify/functions/api/sitemap.xml"
   status = 200
   force = true
 
 [[redirects]]
   from = "/robots.txt"
-  to = "https://adriana-martins-estetica.onrender.com/robots.txt"
+  to = "/.netlify/functions/api/robots.txt"
   status = 200
   force = true
 
-# endereço curto do painel
+# endereços curtos e páginas antigas
 [[redirects]]
   from = "/painel"
   to = "/admin/"
   status = 302
-
-# a antiga página de avaliações passou para o feedback da página inicial
+[[redirects]]
+  from = "/painel/"
+  to = "/admin/"
+  status = 302
 [[redirects]]
   from = "/avaliacoes.html"
   to = "/#fb-sec"
+  status = 301
+[[redirects]]
+  from = "/sobre.html"
+  to = "/espaco.html"
+  status = 301
+[[redirects]]
+  from = "/precario.html"
+  to = "/servicos.html"
+  status = 301
+[[redirects]]
+  from = "/favicon.ico"
+  to = "/favicon.svg"
   status = 301
 
 # páginas e scripts sempre atualizados depois de cada publicação
@@ -59,3 +89,11 @@
   for = "/admin/*"
   [headers.values]
     Cache-Control = "no-cache"
+[[headers]]
+  for = "/assets/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"

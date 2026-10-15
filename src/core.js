@@ -134,7 +134,7 @@ function createBooking(input, { admin = false, offerId = null } = {}) {
         start_at,end_at,status,hold_expires_at,manage_token_hash,source,internal_notes,policy_accepted_at,created_at,updated_at,payment_method,deposit_cents)
         VALUES(?,?,?,?,?,?,0,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(ref, customerId, service.id, chosen.id, service.resource_id, service.name,
       service.price_cents, service.price_type, start, start, status, hold, T.hash(token), admin ? 'admin' : 'online',
-      clean(input.internal_notes, 1000), admin ? null : nowMs, nowMs, nowMs, payPref(input.payment_method, settings), depositFor(service.price_cents, settings)).lastInsertRowid;
+      clean(input.internal_notes, 1000), admin ? null : nowMs, nowMs, nowMs, payPref(input.payment_method, settings), payPref(input.payment_method, settings) === 'mao' ? null : depositFor(service.price_cents, settings)).lastInsertRowid;
     const pm = payPref(input.payment_method, settings);
     logEvent(id, admin ? 'painel' : 'cliente', admin ? 'Marcação criada no painel' : (status === 'pending' ? 'Pedido enviado pelo site' : 'Marcação feita pelo site'),
       `${service.name} · ${when(start)}${admin && input.channel ? ' · via ' + clean(input.channel, 30) : ''}${pm ? ' · pagamento: ' + PAY_PREFS[pm] : ''}`);
@@ -369,7 +369,9 @@ function setPaymentMethod(id, v) {
   const b = mustExist(id);
   const pm = payPref(v, getSettings());
   if (pm === (b.payment_method || '')) return;
-  db.prepare('UPDATE bookings SET payment_method=?, updated_at=? WHERE id=?').run(pm, Date.now(), id);
+  // em mão: paga tudo no espaço, sem sinal; nas outras formas, sinal sobre o preço combinado
+  const dep = pm === 'mao' ? null : depositFor(b.price_cents, getSettings());
+  db.prepare('UPDATE bookings SET payment_method=?, deposit_cents=?, updated_at=? WHERE id=?').run(pm, dep, Date.now(), id);
   logEvent(id, 'painel', 'Forma de pagamento alterada', PAY_PREFS[pm] || 'sem indicação');
 }
 function voidPayment(id, reason) {

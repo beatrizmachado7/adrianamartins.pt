@@ -8,22 +8,29 @@
     "criar-admin": "node scripts/criar-admin.js",
     "backup": "node src/backup.js",
     "test": "node --test tests/*.test.js",
-    "snapshot": "node scripts/snapshot-estatico.js"
+    "snapshot": "node scripts/snapshot-estatico.js",
+    "netlify:local": "node scripts/netlify-local.js",
+    "test:netlify": "node --test tests/netlify-concorrencia.test.js && E2E_NETLIFY=1 node tests/e2e.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "better-sqlite3": "^13.0.3",
+    "@netlify/blobs": "^11.1.4",
     "compression": "^1.8.2",
     "express": "^5.2.1",
     "luxon": "^3.7.2",
-    "nodemailer": "^10.0.13"
+    "nodemailer": "^10.0.13",
+    "serverless-http": "^3.2.0",
+    "sql.js": "^1.11.0"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
     "playwright": "^1.63.0"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^13.0.3"
   }
 }
