@@ -56,7 +56,7 @@
     try { res = await fetch('/api/public' + path, { headers: { 'Content-Type': 'application/json' }, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined }); }
     catch (err) { const d = get && await offlineGet(path); if (d) return d; throw Object.assign(new Error('Sem ligação. Tenta outra vez dentro de momentos.'), { status: 0, offline }); }
     const isJson = /json/.test(res.headers.get('content-type') || '');
-    if ((res.status >= 502 || !isJson) && !window.DEMO_IMG) {
+    if ((res.status >= 502 || (get && res.status >= 500) || !isJson) && !window.DEMO_IMG) {
       const d = get && await offlineGet(path); if (d) return d;
       throw Object.assign(new Error('As marcações online ainda não estão disponíveis. Fala comigo por WhatsApp ou telefone.'), { status: res.status, offline: true });
     }

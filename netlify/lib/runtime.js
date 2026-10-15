@@ -10,13 +10,15 @@ process.env.BACKUPS = 'off';
 if (!process.env.TRUST_PROXY) process.env.TRUST_PROXY = 'true';
 
 const DB_KEY = 'estetica.sqlite';
-let mods = null, booting = null, queue = Promise.resolve();
+let mods = null, booting = null, queue = Promise.resolve(), eventual = false;
 
 // armazenamento: Netlify Blobs (ou, nos testes locais, um substituto em global.__BLOBS)
 function stores() {
   if (global.__BLOBS) return global.__BLOBS;
   const { getStore } = require('@netlify/blobs');
-  return { data: getStore({ name: 'estetica-dados', consistency: 'strong' }), uploads: getStore({ name: 'estetica-fotografias', consistency: 'strong' }) };
+  // leitura "forte" (sempre a versão mais recente); se o ambiente não a suportar, usa a normal em vez de falhar
+  const consistency = eventual ? 'eventual' : 'strong';
+  return { data: getStore({ name: 'estetica-dados', consistency }), uploads: getStore({ name: 'estetica-fotografias', consistency }) };
 }
 
 async function boot() {
@@ -57,7 +59,12 @@ async function withDb(fn) {
   const run = async () => {
     const data = stores().data;
     for (let attempt = 0; attempt < 6; attempt++) {
-      const cur = await data.getWithMetadata(DB_KEY, { type: 'arrayBuffer', consistency: 'strong' });
+      let cur;
+      try { cur = await data.getWithMetadata(DB_KEY, { type: 'arrayBuffer' }); }
+      catch (e) {
+        if (e && e.name === 'BlobsConsistencyError' && !eventual) { console.warn('[blobs] leitura forte indisponível — a usar leitura normal'); eventual = true; return run(); }
+        throw e;
+      }
       m.dbm.db.__load(cur ? new Uint8Array(cur.data) : null);
       m.dbm.init();
       const before = m.dbm.db.__changes();

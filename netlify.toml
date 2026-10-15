@@ -17,34 +17,8 @@
   # o better-sqlite3 só é usado fora do Netlify; aqui usa-se o sql.js (incluído no pacote da função)
   included_files = ["!node_modules/better-sqlite3/**", "!node_modules/node-addon-api/**", "!node_modules/bindings/**", "!node_modules/prebuild-install/**"]
 
-# tarefas automáticas (pedidos que expiram, lista de espera) + cópia de segurança diária
-[functions."tarefas"]
-  schedule = "*/15 * * * *"
-
-# servidor: marcações, painel, horários, fotografias carregadas no painel
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/api/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/uploads/*"
-  to = "/.netlify/functions/api/uploads/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/sitemap.xml"
-  to = "/.netlify/functions/api/sitemap.xml"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/robots.txt"
-  to = "/.netlify/functions/api/robots.txt"
-  status = 200
-  force = true
+# o servidor (/api, /uploads, /sitemap.xml, /robots.txt) e as tarefas de 15 em 15 minutos
+# estão configurados nos próprios ficheiros em netlify/functions
 
 # endereços curtos e páginas antigas
 [[redirects]]
