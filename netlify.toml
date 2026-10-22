@@ -10,6 +10,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # o email da Adriana é público (aparece no site como contacto), por isso não é um segredo:
+  # sem isto, a verificação de segredos do Netlify bloqueia a publicação. A palavra-passe continua protegida.
+  SECRETS_SCAN_OMIT_KEYS = "ADMIN_EMAIL,PUBLIC_BASE_URL"
 
 [functions]
   directory = "netlify/functions"
