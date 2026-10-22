@@ -260,14 +260,19 @@
 
   // WhatsApp com um toque: abre o WhatsApp da Adriana com a mensagem já escrita (ela só carrega em Enviar)
   function waBlock(b) {
-    if (!b.customer_phone || b.start_at < Date.now()) return '';
-    if (b.status === 'pending' && !b.proposed) return `<div class="wa-box"><span class="wa-h">${ic('chat')}Marcação recebida — automático</span>
+    if (!b.customer_phone || !b.wa) return '';
+    const sent = (...labels) => (b.events || []).some(e => e.action === 'WhatsApp aberto' && labels.includes(e.details));
+    const btn = (kind, label, done) => `<a class="btn tiny ${done ? 'secondary' : ''}" data-wa="${kind}" href="${waHref(b.customer_phone)}?text=${encodeURIComponent(b.wa[kind] || '')}" target="_blank" rel="noopener">${ic('chat')}${label}${done ? ' ✓' : ''}</a>`;
+    const box = (done, title, todo, doneTxt, kind, label) => `<div class="wa-box ${done ? '' : 'todo'}"><span class="wa-h">${ic('chat')}${title}</span>
+      <span class="small ${done ? 'muted' : ''}">${done ? doneTxt : todo}</span><div class="wa-btns">${btn(kind, label, done)}</div></div>`;
+    if (b.status === 'completed') return b.wa.review ? box(sent(WA_L.review), 'Pedir avaliação', 'Envia à cliente o link para deixar a opinião dela.', 'Pedido de avaliação já enviado.', 'review', 'Pedir avaliação') : '';
+    if (b.start_at < Date.now()) return '';
+    if (b.status === 'cancelled') return box(sent(WA_L.cancelled), 'Avisar a cliente', 'Falta avisar a cliente do cancelamento.', 'Aviso de cancelamento já enviado.', 'cancelled', 'Aviso de cancelamento');
+    if (b.status === 'pending' && b.proposed) return box(sent(WA_L.proposed), 'Horário sugerido', 'Envia a sugestão de horário à cliente — ela aceita ou recusa pelo link.', 'Sugestão de horário já enviada.', 'proposed', 'Sugerir horário');
+    if (b.status === 'pending') return `<div class="wa-box"><span class="wa-h">${ic('chat')}Marcação recebida — automático</span>
       <span class="small muted">A cliente já viu no site a confirmação da marcação e os dados do sinal, e enviou-te a marcação por WhatsApp. Não precisas de enviar nada agora: aprova e envia o "Marcação confirmada".</span></div>`;
-    if (b.status !== 'confirmed' || !b.wa) return '';
-    const done = (b.events || []).some(e => e.action === 'WhatsApp aberto' && (e.details === WA_L.confirmed || e.details === 'pedido confirmado'));
-    return `<div class="wa-box ${done ? '' : 'todo'}"><span class="wa-h">${ic('chat')}Enviar por WhatsApp</span>
-      <span class="small ${done ? 'muted' : ''}">${done ? 'Mensagem "Marcação confirmada" já enviada. Podes voltar a abri-la se precisares.' : 'Falta avisar a cliente: <b>"Marcação confirmada"</b>.'}</span>
-      <div class="wa-btns"><a class="btn tiny ${done ? 'secondary' : ''}" data-wa="confirmed" href="${waHref(b.customer_phone)}?text=${encodeURIComponent(b.wa.confirmed)}" target="_blank" rel="noopener">${ic('chat')}Marcação confirmada${done ? ' ✓' : ''}</a></div></div>`;
+    if (b.status !== 'confirmed') return '';
+    return box(sent(WA_L.confirmed, 'pedido confirmado'), 'Enviar por WhatsApp', 'Falta avisar a cliente: <b>"Marcação confirmada"</b>.', 'Mensagem "Marcação confirmada" já enviada. Podes voltar a abri-la se precisares.', 'confirmed', 'Marcação confirmada');
   }
   // lembretes por WhatsApp na véspera (um toque, a partir das 21h)
   const remRow = b => `<div class="mini-row rem-row"><span><b>${hhmm(b.start_at)}</b> · ${esc(b.customer_name)} · ${esc(b.service_name)}${b.attendance_confirmed_at ? ' <span class="mini ok">Presença confirmada</span>' : ''}</span>
@@ -1408,22 +1413,27 @@
         const st = await api('/integrations');
     if (!(typeof body !== 'undefined' ? body : $('#view')).isConnected) return;
         const E = st.email;
-        body.innerHTML = `<section class="panel"><h2>${ic('chat')} Mensagens por WhatsApp</h2>
-            <p class="small muted" style="margin:0">As mensagens às clientes saem do teu WhatsApp, com um toque: em cada marcação, o botão <b>Enviar por WhatsApp</b> abre a conversa com o texto já escrito (com o link da marcação e os dados do sinal) e só tens de carregar em Enviar.
-            Cada mensagem aberta fica registada no histórico da marcação.</p></section>
-          <form id="waf" class="panel"><h2>Mensagens de WhatsApp</h2>
-            <p class="small muted">Cada mensagem abre o teu WhatsApp já escrita — só tens de carregar em Enviar. A <b>marcação recebida é automática</b>: no fim da marcação a cliente vê no site a confirmação e os dados do sinal, e envia-te a marcação por WhatsApp.</p>
-            <div class="wa-tpl"><div class="field"><label for="w-k">Ao marcar · mensagem que a cliente te envia</label><span class="hint">No fim da marcação no site, a cliente carrega em "Enviar por WhatsApp" e esta mensagem vai para ti. Podes usar <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{pagamento}</code> <code>{nome}</code> (nome completo); se a cliente não escolher pagamento, essa linha não aparece.</span><textarea class="input" id="w-k" name="wa_tpl_client" rows="8" maxlength="800">${esc(s.wa_tpl_client || '')}</textarea></div>
-              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-k"></p></div></div>
-            <div class="wa-tpl"><div class="field"><label for="w-c">1 · Marcação confirmada</label><span class="hint">Botão na marcação, depois de a aprovares.</span><textarea class="input" id="w-c" name="wa_tpl_confirmed" rows="7">${esc(s.wa_tpl_confirmed)}</textarea></div>
-              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-c"></p></div></div>
-            <div class="wa-tpl"><div class="field"><label for="w-r">2 · Lembrete (véspera)</label><span class="hint">No dia anterior, a partir da hora escolhida, aparece no Dashboard a lista "Lembretes de amanhã" com um botão por cliente.</span><textarea class="input" id="w-r" name="wa_tpl_reminder" rows="8">${esc(s.wa_tpl_reminder)}</textarea>
-              <label class="small" for="w-rh" style="margin-top:8px;display:block">Hora do lembrete</label><select class="input" id="w-rh" name="reminder_wa_hour" style="max-width:140px">${[...new Set([17, 18, 19, 20, 21, 22, 23, Number(s.reminder_wa_hour || 21)])].sort((x, y) => x - y).map(h => `<option value="${h}" ${Number(s.reminder_wa_hour || 21) === h ? 'selected' : ''}>${h}h</option>`).join('')}</select></div>
-              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-r"></p></div></div>
-            <div class="wa-tpl"><div class="field"><label for="w-b">3 · Mensagem de aniversário</label><span class="hint">Botão em Clientes → Aniversários e no Dashboard, no dia de anos da cliente.</span><textarea class="input" id="w-b" name="birthday_message" rows="9" maxlength="800">${esc(s.birthday_message)}</textarea></div>
-              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="w-b"></p></div></div>
-            <p class="small muted">Podes usar: <code>{nome}</code> primeiro nome · <code>{profissional}</code> o teu nome · nas mensagens 1 e 2 também <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{ref}</code> <code>{link}</code> (link da marcação) <code>{morada}</code> <code>{sinal_texto}</code> (sinal recebido ou por receber).</p>
-            <button class="btn">Guardar mensagens</button></form>
+        const tpl = (id, name, label, hint, rows = 8) => `<div class="wa-tpl"><div class="field"><label for="${id}">${label}</label><span class="hint">${hint}</span><textarea class="input" id="${id}" name="${name}" rows="${rows}" maxlength="1500">${esc(s[name] || '')}</textarea></div>
+              <div class="wa-prev"><span class="small muted">Pré-visualização</span><p data-prev="${id}"></p></div></div>`;
+        const hours = [...new Set([17, 18, 19, 20, 21, 22, 23, Number(s.reminder_wa_hour || 21)])].sort((x, y) => x - y);
+        body.innerHTML = `<form id="waf" class="wa-cards">
+          <section class="panel wa-card"><h2>${ic('users')} Mensagens das clientes</h2>
+            <p class="small muted">O que as clientes te enviam pelo site. A mensagem já vai escrita — a cliente só carrega em Enviar e chega ao teu WhatsApp.</p>
+            ${tpl('w-k', 'wa_tpl_client', '1 · Ao fazer uma marcação', 'No fim da marcação no site, botão "Enviar por WhatsApp". Se a cliente não escolher pagamento, a linha do pagamento não aparece.', 10)}
+            ${tpl('w-ct', 'wa_tpl_client_contact', '2 · Contacto pelo WhatsApp', 'Botões "WhatsApp" do site (rodapé, contactos e quando as marcações online não estão disponíveis).', 3)}
+            <p class="small muted">Podes usar: <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{pagamento}</code> <code>{nome}</code> (nome completo da cliente) — só na mensagem 1.</p>
+            <button class="btn">Guardar mensagens</button></section>
+          <section class="panel wa-card"><h2>${ic('chat')} As tuas mensagens às clientes</h2>
+            <p class="small muted">Cada mensagem abre o teu WhatsApp já escrita, num botão na marcação — só tens de carregar em Enviar. Fica registado no histórico. A <b>marcação recebida</b> é automática (a cliente vê tudo no site).</p>
+            ${tpl('w-c', 'wa_tpl_confirmed', '1 · Marcação confirmada', 'Botão na marcação, depois de a aprovares.')}
+            ${tpl('w-r', 'wa_tpl_reminder', '2 · Lembrete (véspera)', 'A partir da hora escolhida, no Dashboard aparece "Lembretes de amanhã" com um botão por cliente.')}
+            <div class="field wa-hour"><label for="w-rh">Hora do lembrete</label><select class="input" id="w-rh" name="reminder_wa_hour">${hours.map(h => `<option value="${h}" ${Number(s.reminder_wa_hour || 21) === h ? 'selected' : ''}>${h}h</option>`).join('')}</select></div>
+            ${tpl('w-p', 'wa_tpl_proposed', '3 · Horário sugerido', 'Quando sugeres outro horário a um pedido: botão "Sugerir horário" na marcação.')}
+            ${tpl('w-x', 'wa_tpl_cancelled', '4 · Cancelamento', 'Quando cancelas uma marcação: botão "Aviso de cancelamento" na marcação.')}
+            ${tpl('w-v', 'wa_tpl_review', '5 · Pedido de avaliação', 'Depois de marcares a marcação como concluída: botão "Pedir avaliação".', 6)}
+            ${tpl('w-b', 'birthday_message', '6 · Aniversário', 'Em Clientes → Aniversários e no Dashboard, no dia de anos da cliente.', 9)}
+            <p class="small muted">Podes usar: <code>{nome}</code> primeiro nome · <code>{profissional}</code> o teu nome · nas mensagens 1 a 4 também <code>{servico}</code> <code>{data}</code> <code>{hora}</code> <code>{morada}</code> <code>{link}</code> (link da marcação) <code>{sinal_texto}</code> (sinal recebido ou por receber) · na 4 <code>{site}</code> (página de marcações) · na 5 <code>{link_avaliacao}</code>.</p>
+            <button class="btn">Guardar mensagens</button></section></form>
           <section class="panel"><h2>Próximas marcações — presença</h2><div id="rem-list"><div class="spinner"></div></div></section>`;
         const list = await api(`/bookings?status=confirmed&from=${today()}&to=${addDays(today(), 7)}`);
         if (!$('#rem-list')) return;
@@ -1437,9 +1447,9 @@
           await api('/settings', { method: 'PUT', body: out }); Object.assign(s, out); toast('Mensagens guardadas');
         });
         const EX = { nome: 'Ana', profissional: s.professional_name || s.business_name, servico: 'Verniz Gel', data: 'sábado, 17 de outubro', hora: '10:00', ref: 'AB12CD', link: (s.public_base_url || '') + '/gerir.html?t=…',
-          morada: `${s.address_line}, ${s.postal_code} ${s.city}`, sinal: '9,00 €', pagamento: 'Em mão (no espaço)', sinal_texto: `Para reservar, peço um sinal de 9,00 € por MB WAY para o ${s.mbway_number}, com a referência AB12CD na descrição. Assim que receber, confirmo a tua marcação.` };
+          morada: `${s.address_line}, ${s.postal_code} ${s.city}`, sinal: '9,00 €', pagamento: 'Em mão (no espaço)', site: (s.public_base_url || '') + '/marcar.html', link_avaliacao: (s.public_base_url || '') + '/avaliar.html?t=…', sinal_texto: `Para reservar, peço um sinal de 9,00 € por MB WAY para o ${s.mbway_number}, com a referência AB12CD na descrição. Assim que receber, confirmo a tua marcação.` };
         const fillEx = (t, X = EX) => t.replace(/\{(\w+)\}/g, (m, k) => k in X ? X[k] : m).replace(/\n{3,}/g, '\n\n').trim();
-        $$('[data-prev]', body).forEach(p => { const ta = $('#' + p.dataset.prev, body); const up = () => { p.textContent = fillEx(ta.value, p.dataset.prev === 'w-k' ? { ...EX, nome: 'Ana Silva' } : EX); }; ta.addEventListener('input', up); up(); });
+        $$('[data-prev]', body).forEach(p => { const ta = $('#' + p.dataset.prev, body); const up = () => { p.textContent = fillEx(ta.value, ['w-k', 'w-ct'].includes(p.dataset.prev) ? { ...EX, nome: 'Ana Silva' } : EX); }; ta.addEventListener('input', up); up(); });
       },
       pagamentos: async () => {
         body.innerHTML = `<form id="sf" class="panel"><h2>Pagamentos e sinal</h2>

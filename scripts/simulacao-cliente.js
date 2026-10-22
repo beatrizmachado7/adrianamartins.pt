@@ -42,7 +42,7 @@ const emails = id => JSON.parse(node(`const {db}=require('./src/db');console.log
   c.on('pageerror', e => errors.push(e.message));
   try {
     // 1. chega ao site (link do Instagram)
-    await c.goto(BASE + '/'); await c.waitForSelector('#featured .svc-card');
+    await c.goto(BASE + '/'); await c.waitForSelector('#featured .feat-card');
     await c.evaluate(() => document.querySelectorAll('.reveal').forEach(e => e.classList.add('in')));
     add('cliente', 'Chega ao site', 'A cliente abre o link que a Adriana partilhou no Instagram. Vê logo a fotografia, o título e o botão "Fazer marcação" (que acompanha o scroll).', await shot(c));
     add('cliente', 'Vê os serviços em destaque', 'Os serviços mais procurados, com preço, logo na página inicial.', await shot(c, '#featured'));

@@ -609,3 +609,11 @@ code { font-size: .85em; background: var(--cream); border: 1px solid var(--line)
 .rem-panel.todo .btn:not(.secondary), .rem-row .btn:not(.secondary) { background: #1f8f5a; border-color: #1f8f5a; color: #fff; }
 .rem-row .row-actions .btn { white-space: nowrap; }
 .rem-row .btn.secondary, .rem-row .btn.secondary:hover { background: #fff; color: #1f8f5a; border-color: #9ed3b6; }
+
+/* v29 — Mensagens WhatsApp em dois cartões (clientes / Adriana) */
+.wa-cards { display: block; }
+.wa-card h2 { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
+.wa-card > .btn { margin-top: 6px; }
+.wa-hour { margin: -6px 0 18px; }
+.wa-hour select { max-width: 140px; }
+.login-note { margin: 14px 0 0; text-align: center; }

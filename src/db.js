@@ -66,11 +66,12 @@ const DEFAULT_SETTINGS = {
   // mensagens de WhatsApp com um toque (o painel abre o WhatsApp da Adriana com o texto já escrito)
   wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pela tua marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar a tua marcação aqui: {link}\n\nUm beijinho,\n{profissional}',
   wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\n{sinal_texto}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
-  wa_tpl_proposed: 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}',
-  wa_tpl_cancelled: 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}',
-  wa_tpl_review: 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}',
+  wa_tpl_proposed: 'Olá {nome}! 😊 O horário que escolheste já não está disponível, mas posso receber-te:\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\nPodes aceitar ou recusar aqui: {link}\n\nUm beijinho,\n{profissional}',
+  wa_tpl_cancelled: 'Olá {nome}! A tua marcação foi cancelada.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\nSe quiseres, escolhe outro horário aqui: {site}\n\nUm beijinho,\n{profissional}',
+  wa_tpl_review: 'Olá {nome}! 🤍 Obrigada pela tua visita.\n\nSe tiveres um minuto, adorava saber a tua opinião — ajuda-me muito: {link_avaliacao}\n\nUm beijinho,\n{profissional}',
   wa_tpl_reminder: 'Olá {nome}! 😊 Passo só para te lembrar da tua marcação de amanhã.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nSe puderes, confirma a tua presença aqui: {link}\n\nAté amanhã!\n{profissional}',
   reminder_wa_hour: 21,
+  wa_tpl_client_contact: 'Olá Adriana! 😊 Gostava de fazer uma marcação.',
   wa_tpl_client: 'Olá Adriana! 😊\nAcabei de fazer uma marcação no site.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n💳 Pagamento: {pagamento}\n👤 {nome}\n\nObrigada!',
   arrival_note: 'Chega 5 minutos antes. Se tiveres alguma dúvida sobre a preparação, contacta-me antes da visita.',
   faq: [
@@ -311,6 +312,11 @@ db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_pending',
 
 // lembrete por WhatsApp na véspera, às 21h (outubro 2026)
 db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_reminder', JSON.stringify('Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}'));
+
+// mensagens de horário sugerido, cancelamento e avaliação com o mesmo estilo das outras (outubro 2026)
+db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_proposed', JSON.stringify('Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}'));
+db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_cancelled', JSON.stringify('Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}'));
+db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('wa_tpl_review', JSON.stringify('Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}'));
 
 // em mão = sem sinal (outubro 2026): a política antiga, se não tiver sido alterada, passa à nova
 db.prepare('DELETE FROM settings WHERE key=? AND value=?').run('booking_policy', JSON.stringify(DEFAULT_SETTINGS.booking_policy.split('Se preferires pagar em mão, escolhe essa opção ao marcar: nesse caso não há sinal e pagas o valor total no dia, no espaço.').join('Se preferires pagar em mão, escolhe essa opção ao marcar e combinamos a entrega do sinal.').split('Para reservar o dia e a hora com pagamento por MB WAY ou transferência bancária, peço um sinal de 50% do valor do serviço').join('Para reservar o dia e a hora, peço um sinal de 50% do valor do serviço, por MB WAY ou transferência bancária')));

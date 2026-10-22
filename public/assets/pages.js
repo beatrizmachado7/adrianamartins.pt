@@ -1,7 +1,7 @@
 /* Conteúdo dinâmico das páginas públicas (dados vêm da API e são editáveis no painel). */
 (function () {
   'use strict';
-  const { api, config, icon, esc, $, $$, fmt, photo, stars, hoursTable, hoursSummary, closuresHtml, waLink, telLink } = window.Site;
+  const { api, config, icon, esc, $, $$, fmt, photo, stars, hoursTable, hoursSummary, closuresHtml, waLink, waContact, telLink, reveal } = window.Site;
 
   const priceNote = s => s.price_type !== 'fixed' && s.price_note ? `<p class="price-note">${s.price_type === 'variable' ? '* ' : ''}${esc(s.price_note)}</p>` : '';
   const svcCard = (s, catName) => `<article class="svc-card${s.image_url ? '' : ' no-photo'}">
@@ -13,6 +13,17 @@
         ${priceNote(s)}
         <a class="btn small" href="/marcar.html?servico=${s.id}" aria-label="Marcar ${esc(s.name)}">Marcar</a>
       </div>
+    </article>`;
+
+  // cartões dos serviços em destaque (os mais pedidos): mesmo estilo dos cartões da página Serviços, com mais destaque
+  const SPARK = '<svg class="orn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.6 4.6 2.3 6.4 6.9 7-4.6.6-6.3 2.4-6.9 7-.6-4.6-2.3-6.4-6.9-7 4.6-.6 6.3-2.4 6.9-7z" fill="currentColor"/></svg>';
+  const featCard = (s, catName, i) => `<article class="svc-cat-card compact feat-card reveal" style="--d:${i * 110}ms">
+      <span class="feat-badge">${SPARK}Mais pedido</span><span class="feat-shine" aria-hidden="true"></span>
+      ${s.image_url ? photo(s.image_url, s.name) : ''}
+      <header class="scc-head">${SPARK}${catName && catName !== s.name ? `<span class="feat-cat">${esc(catName)}</span>` : ''}<h3>${esc(s.name)}</h3></header>
+      <p class="feat-price">${fmt.price(s.price_cents, s.price_type)}</p>
+      ${priceNote(s)}
+      <div class="scc-foot"><a class="btn" href="/marcar.html?servico=${s.id}" aria-label="Marcar ${esc(s.name)}">Marcar</a></div>
     </article>`;
 
   // feedback recebido pelas redes sociais (texto das mensagens, sem nomes nem fotografias das clientes)
@@ -53,7 +64,8 @@
       }
       const all = svc.categories.flatMap(cat => cat.services.filter(s => s.bookable !== 0).map(s => ({ ...s, _cat: cat.name })));
       const feat = (all.filter(s => s.featured).length ? all.filter(s => s.featured) : all).slice(0, 4);
-      $('#featured').innerHTML = feat.map(s => svcCard(s, s._cat)).join('') || '<p class="empty-line">Serviços em breve.</p>';
+      $('#featured').innerHTML = feat.map((s, i) => featCard(s, s._cat, i)).join('') || '<p class="empty-line">Serviços em breve.</p>';
+      reveal();
       $('#about-photo').innerHTML = photo(c.about_image, 'Fotografia da esteticista');
       $('#about-text').textContent = c.about_text;
       const nFb = testimonials(c);
@@ -213,7 +225,7 @@
       $('#access').innerHTML = c.access_info ? `<h2 class="label-h" style="margin-top:28px">Estacionamento e acesso</h2><p>${esc(c.access_info)}</p>` : '';
       $('#contact-list').innerHTML = `
         <li><a href="${telLink(c.phone)}">${icon('phone')} ${esc(c.phone)}</a></li>
-        ${c.whatsapp ? `<li><a href="${waLink(c.whatsapp)}" target="_blank" rel="noopener">${icon('phone')} Falar por WhatsApp</a></li>` : ''}
+        ${c.whatsapp ? `<li><a href="${waContact(c)}" target="_blank" rel="noopener">${icon('phone')} Falar por WhatsApp</a></li>` : ''}
         ${c.instagram ? `<li><a href="${esc(Site.igUrl(c.instagram))}" target="_blank" rel="noopener">${icon('instagram')} ${esc(Site.igHandle(c.instagram))}</a></li>` : ''}
         <li><a href="mailto:${esc(c.email)}">${icon('mail')} ${esc(c.email)}</a></li>`;
       $('#hours').innerHTML = hoursTable(c.hours);

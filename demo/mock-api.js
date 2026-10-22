@@ -57,10 +57,10 @@
     payment_note: 'Os restantes 50% são pagos no final do serviço.',
     wa_tpl_pending: 'Olá {nome}! 😊 Obrigada pela tua marcação.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\n{sinal_texto}\n\nPodes acompanhar a tua marcação aqui: {link}\n\nUm beijinho,\n{profissional}',
     wa_tpl_confirmed: 'Olá {nome}! A tua marcação está confirmada. 🤍\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\n{sinal_texto}\n\nPeço que chegues 5 minutos antes. Se precisares de alterar, podes fazê-lo até 48 horas antes, aqui: {link}\n\nAté breve!\n{profissional}',
-    wa_tpl_proposed: 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\n\nPodes aceitar ou recusar aqui: {link}\n\n{profissional}',
-    wa_tpl_cancelled: 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\n\nSe quiseres, escolhe outro horário em {site}\n\n{profissional}',
-    wa_tpl_review: 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\n\n{profissional}',
-    wa_tpl_reminder: 'Olá {nome}! 😊 Passo só para te lembrar da tua marcação de amanhã.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nSe puderes, confirma a tua presença aqui: {link}\n\nAté amanhã!\n{profissional}', reminder_wa_hour: 21, wa_tpl_client: 'Olá Adriana! 😊\nAcabei de fazer uma marcação no site.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n💳 Pagamento: {pagamento}\n👤 {nome}\n\nObrigada!',
+    wa_tpl_proposed: 'Olá {nome}! 😊 O horário que escolheste já não está disponível, mas posso receber-te:\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\nPodes aceitar ou recusar aqui: {link}\n\nUm beijinho,\n{profissional}',
+    wa_tpl_cancelled: 'Olá {nome}! A tua marcação foi cancelada.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n\nSe quiseres, escolhe outro horário aqui: {site}\n\nUm beijinho,\n{profissional}',
+    wa_tpl_review: 'Olá {nome}! 🤍 Obrigada pela tua visita.\n\nSe tiveres um minuto, adorava saber a tua opinião — ajuda-me muito: {link_avaliacao}\n\nUm beijinho,\n{profissional}',
+    wa_tpl_reminder: 'Olá {nome}! 😊 Passo só para te lembrar da tua marcação de amanhã.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n📍 {morada}\n\nSe puderes, confirma a tua presença aqui: {link}\n\nAté amanhã!\n{profissional}', reminder_wa_hour: 21, wa_tpl_client_contact: 'Olá Adriana! 😊 Gostava de fazer uma marcação.', wa_tpl_client: 'Olá Adriana! 😊\nAcabei de fazer uma marcação no site.\n\n✨ {servico}\n🗓️ {data}, às {hora}\n💳 Pagamento: {pagamento}\n👤 {nome}\n\nObrigada!',
     arrival_note: 'Chega 5 minutos antes. Se tiveres alguma dúvida sobre a preparação, contacta-me antes da visita.',
     faq: [
       { q: 'Como faço uma marcação?', a: 'Em Marcações, escolhe o serviço e um dos dias e horários disponíveis e envia o pedido com o teu nome e telemóvel. Confirmo a marcação no prazo máximo de 24 horas e envio-te a confirmação por WhatsApp, com um link para gerires a marcação.' },
@@ -485,6 +485,7 @@
           (s.reviews ||= []).push({ id: ++s.seq, booking_id: b.id, rating, comment, author_name: c.name.split(' ')[0] + ' (demo)', service_name: b.service_name, verified: 1, status: i === 2 ? 'pending' : 'published', hidden_reason: '', reply: '', created_at: b.start_at + 3 * H, demo: true }); });
     }
   }
+  function migrate27() { if (S.v27) return; S.v27 = true; const OLD = {'wa_tpl_proposed': 'Olá {nome}! O horário que pediste não está disponível, mas posso receber-te {data} às {hora} ({servico}).\\n\\nPodes aceitar ou recusar aqui: {link}\\n\\n{profissional}', 'wa_tpl_cancelled': 'Olá {nome}! A tua marcação de {data} às {hora} ({servico}) foi cancelada.\\n\\nSe quiseres, escolhe outro horário em {site}\\n\\n{profissional}', 'wa_tpl_review': 'Olá {nome}! Obrigada pela tua visita. 🤍 Se tiveres um minuto, adorava saber a tua opinião: {link_avaliacao}\\n\\n{profissional}'}; for (const k in OLD) if (S.settings[k] === OLD[k].replace(/\\n/g, '\n')) S.settings[k] = DEFAULTS[k]; if (S.settings.wa_tpl_client_contact == null) S.settings.wa_tpl_client_contact = DEFAULTS.wa_tpl_client_contact; dirty = true; }
   function migrate26() { if (S.v26) return; S.v26 = true; if (S.settings.wa_tpl_reminder === 'Olá {nome}! Lembro-te da tua marcação de {data} às {hora} ({servico}).\n\nConfirma a tua presença aqui, por favor: {link}\n\nAté já!\n{profissional}') S.settings.wa_tpl_reminder = DEFAULTS.wa_tpl_reminder; if (S.settings.reminder_wa_hour == null) S.settings.reminder_wa_hour = 21; if (S.settings.wa_tpl_client == null) S.settings.wa_tpl_client = DEFAULTS.wa_tpl_client; dirty = true; }
   function remindersTomorrow() {
     const t = addDays(today(), 1), [a, z] = dayRange(t), hour = Number(S.settings.reminder_wa_hour) || 21;
@@ -529,7 +530,7 @@
   function migrate15() { if (S.v15) return; S.v15 = true; for (const k of ['space_title', 'space_text', 'space_image', 'space_points']) if (!(k in S.settings)) S.settings[k] = JSON.parse(JSON.stringify(DEFAULTS[k])); dirty = true; }
   function migrate14() { if (S.v14) return; S.v14 = true; if (!S.settings.whatsapp) S.settings.whatsapp = '939 907 962'; dirty = true; }
   if (!S || !S.settings) S = seed();
-  migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); migrate23(); migrate24(); migrate25(); migrate26();
+  migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); migrate23(); migrate24(); migrate25(); migrate26(); migrate27();
   const save = () => {
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* sem armazenamento: fica em memória */ }
     if (dirty && window.DemoAPI && window.DemoAPI.onSave) window.DemoAPI.onSave(S);
@@ -611,7 +612,7 @@
       out.push(l.map(c => ({ id: c.id, name: c.name, email: c.email, phone: c.phone, created_at: c.created_at, reason: k[0] === 't' ? 'mesmo telefone' : 'mesmo email' }))); }
     return out;
   }
-  const PUBLIC_KEYS = ['wa_tpl_client', 'business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials', 'map_embed_url', 'map_link_url', 'professional_name',
+  const PUBLIC_KEYS = ['wa_tpl_client', 'wa_tpl_client_contact', 'business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials', 'map_embed_url', 'map_link_url', 'professional_name',
     'about_text', 'space_title', 'space_text', 'space_image', 'space_points', 'training', 'experience_text', 'experience_steps', 'hero_image', 'about_image', 'gallery', 'video_url', 'video_file', 'video_image', 'cancellation_policy', 'cancel_limit_hours', 'reschedule_limit_hours', 'min_notice_hours',
     'max_advance_days', 'arrival_note', 'faq', 'pending_hold_hours', 'waitlist_offer_minutes', 'privacy_controller', 'access_info', 'booking_policy', 'legal_id', 'register_enabled', 'register_title', 'register_intro',
     'deposit_enabled', 'deposit_percent', 'mbway_number', 'iban', 'iban_name', 'payment_note'];
@@ -989,7 +990,7 @@
     reset() { const te = S.textEdits; try { localStorage.removeItem(KEY); } catch { /* */ } S = seed(); S.textEdits = te || {}; dirty = true; save(); },
     jobs: () => { jobs(); save(); },
     state: () => S,
-    load(st) { if (st && st.settings) { S = st; migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); migrate23(); migrate24(); migrate25(); migrate26(); jobs(); save(); } },
+    load(st) { if (st && st.settings) { S = st; migrate(); migrate10(); migrate11(); migrate12(); migrate13(); migrate14(); migrate15(); migrate16(); migrate17(); migrate18(); migrate19(); migrate20(); migrate21(); migrate22(); migrate23(); migrate24(); migrate25(); migrate26(); migrate27(); jobs(); save(); } },
     setField(kind, id, field, v) {
       const list = kind === 'cat' ? S.categories : S.services, x = list.find(e => e.id === +id);
       if (x && field in x) { x[field] = v; if (kind === 'svc' && field === 'name') S.bookings.forEach(b => { if (b.service_id === x.id && b.start_at > Date.now() && ACTIVE(b)) b.service_name = v; }); dirty = true; save(); }

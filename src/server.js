@@ -51,6 +51,7 @@ function checkPassword(pw, stored) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 const cookieName = 'sid';
+const SESSION_DAYS = 30;
 function parseCookies(req) {
   return Object.fromEntries((req.headers.cookie || '').split(';').map(c => c.trim().split('=')).filter(p => p[0]).map(([k, ...v]) => [k, decodeURIComponent(v.join('='))]));
 }
@@ -66,7 +67,7 @@ function auth(req, res, next) {
 
 // ---------- API pública ----------
 const pub = express.Router();
-const PUBLIC_KEYS = ['wa_tpl_client', 'business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials',
+const PUBLIC_KEYS = ['wa_tpl_client', 'wa_tpl_client_contact', 'business_name', 'hero_title', 'hero_subtitle', 'address_line', 'postal_code', 'city', 'phone', 'email', 'whatsapp', 'instagram', 'facebook', 'tiktok', 'logo_image', 'testimonials',
   'map_embed_url', 'map_link_url', 'professional_name', 'about_text', 'space_title', 'space_text', 'space_image', 'space_points', 'training', 'experience_text', 'experience_steps', 'hero_image', 'hero_image_2', 'hero_image_3',
   'about_image', 'about_image_2', 'video_url', 'video_file', 'video_image', 'services_image', 'pricing_image', 'booking_image', 'reviews_image', 'contacts_image', 'gallery', 'cancellation_policy', 'cancel_limit_hours', 'reschedule_limit_hours', 'min_notice_hours', 'max_advance_days', 'arrival_note', 'faq',
   'pending_hold_hours', 'waitlist_offer_minutes', 'privacy_controller', 'access_info', 'booking_policy', 'legal_id', 'register_enabled', 'register_title', 'register_intro',
@@ -182,11 +183,14 @@ app.use('/api/public', pub);
 const adm = express.Router();
 adm.post('/login', rateLimit(8, 900000), (req, res) => {
   const u = db.prepare('SELECT * FROM admin_users WHERE email=?').get(String(req.body.email || '').toLowerCase().trim());
+  if (!u && !db.prepare('SELECT COUNT(*) n FROM admin_users').get().n)
+    throw new AppError(401, 'NO_ADMIN', 'O painel ainda não tem conta. Define ADMIN_EMAIL e ADMIN_PASSWORD (mín. 10 caracteres) nas variáveis do Netlify e volta a publicar o site.');
   if (!u || !checkPassword(req.body.password || '', u.password_hash)) throw new AppError(401, 'AUTH', 'Email ou palavra-passe incorretos.');
   const tok = T.random(32);
-  const days = 14;
+  const days = SESSION_DAYS; // sessão fica iniciada 30 dias; depois pede o login outra vez
   db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)').run(T.hash(tok), u.id, Date.now() + days * 86400000);
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  const secure = process.env.NODE_ENV === 'production' || req.secure ? '; Secure' : '';
+  db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(Date.now());
   res.set('Set-Cookie', `${cookieName}=${tok}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${days * 86400}${secure}`);
   res.json({ ok: true, name: u.name });
 });

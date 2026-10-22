@@ -884,3 +884,48 @@ body[data-page="servicos"] .page-head { background: transparent; }
 /* v27 — fim da marcação: enviar o pedido por WhatsApp */
 .wa-send { text-align: left; background: #fff; border: 1.5px solid var(--brown-900); border-radius: var(--radius); padding: 16px 18px; margin: 0 0 18px; }
 .wa-send p { margin: 0 0 12px; font-size: .95rem; }
+
+/* v28 — Serviços em destaque (os mais pedidos): mesmo estilo dos cartões de Serviços, com mais destaque */
+.feat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding-top: 14px; }
+@media (max-width: 1080px) { .feat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.feat-card { min-height: 0; padding: 34px 24px 22px; overflow: visible;
+  box-shadow: 0 1px 2px rgba(58, 42, 32, .05), 0 18px 44px rgba(150, 112, 55, .12); }
+.feat-card.reveal { transition: opacity .8s ease var(--d, 0ms), transform .8s ease var(--d, 0ms), box-shadow .35s ease; }
+/* moldura dourada mais forte e com um brilho que percorre a moldura devagar */
+.feat-card::before { opacity: 1; padding: 1.5px; background-size: 300% 300%; animation: feat-frame 9s ease-in-out infinite; }
+@keyframes feat-frame { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.feat-card::after { top: -30px; right: -30px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(212, 179, 120, .2), rgba(212, 179, 120, 0) 70%); }
+/* selo "Mais pedido" */
+.feat-badge { position: absolute; top: -13px; left: 22px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 10px; border-radius: 999px;
+  background: linear-gradient(135deg, #c9a46a, #a8834a); color: #fff; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(150, 112, 55, .3); z-index: 2; }
+.feat-badge .orn { width: 12px; height: 12px; margin: 0; color: #fff; display: inline-block; }
+/* reflexo que passa pelo cartão ao passar o rato */
+.feat-shine { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; z-index: 1; }
+.feat-shine::before { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%; transform: skewX(-18deg);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(246, 234, 210, .55), rgba(255, 255, 255, 0)); }
+.feat-card .scc-head { padding-bottom: 16px; }
+.feat-card .scc-head .orn { margin-bottom: 12px; }
+.feat-cat { display: block; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-text); font-weight: 600; margin-bottom: 6px; }
+.feat-card h3 { font-size: clamp(1.15rem, 1.6vw, 1.35rem); line-height: 1.25; margin: 0; }
+.feat-price { font-size: 1.45rem; font-weight: 600; letter-spacing: -.01em; color: var(--brown-900); margin: 14px 0 0; font-variant-numeric: lining-nums tabular-nums; }
+.feat-card .price-note { margin: 4px 0 0; font-size: .85rem; }
+.feat-card .scc-foot { margin-top: auto; padding-top: 20px; border-top: 0; justify-content: flex-start; }
+.feat-card .scc-foot .btn { width: 100%; justify-content: center; }
+@media (hover: hover) {
+  .feat-card:hover { transform: translateY(-6px); box-shadow: 0 2px 4px rgba(58, 42, 32, .05), 0 28px 60px rgba(150, 112, 55, .24); }
+  .feat-card:hover .feat-shine::before { left: 120%; transition: left .9s ease; }
+  .feat-card:hover .feat-badge { transform: translateY(-2px); }
+}
+.feat-badge { transition: transform .35s ease; }
+/* telemóvel: cartões lado a lado a deslizar */
+@media (max-width: 640px) {
+  .feat-grid { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; padding: 20px 20px 40px; margin: 0 -20px -22px; scrollbar-width: none; }
+  .feat-grid::-webkit-scrollbar { display: none; }
+  .feat-card { flex: 0 0 74%; scroll-snap-align: start; padding: 30px 20px 18px; box-shadow: 0 1px 2px rgba(58, 42, 32, .05), 0 10px 24px rgba(150, 112, 55, .12); }
+  .feat-price { font-size: 1.3rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feat-card::before { animation: none; }
+  .feat-card:hover .feat-shine::before { transition: none; }
+}

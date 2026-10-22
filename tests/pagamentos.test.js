@@ -171,3 +171,19 @@ test('lembrete por WhatsApp na véspera: lista de amanhã, mensagem preenchida e
   assert.equal((await adm('GET', '/reminders')).body.hour, 20);
   assert.equal((await adm('PUT', '/settings', { reminder_wa_hour: 3 })).status, 422);
 });
+
+test('login do painel: sessão de 30 dias, depois pede o login outra vez', async () => {
+  const res = await fetch(base + '/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'a@teste.pt', password: 'palavra-passe-1' }) });
+  assert.equal(res.status, 200);
+  const sc = res.headers.get('set-cookie');
+  assert.match(sc, /Max-Age=2592000/); assert.match(sc, /HttpOnly/);
+  const tok = sc.split(';')[0];
+  const T = require('../src/tokens');
+  const row = db.prepare('SELECT expires_at FROM sessions WHERE token_hash=?').get(T.hash(tok.split('=')[1]));
+  assert.ok(Math.abs(row.expires_at - (Date.now() + 30 * 86400000)) < 60000, 'expira daqui a 30 dias');
+  const ok = await fetch(base + '/api/admin/inbox/count', { headers: { Cookie: tok } });
+  assert.equal(ok.status, 200);
+  db.prepare('UPDATE sessions SET expires_at=? WHERE token_hash=?').run(Date.now() - 1000, T.hash(tok.split('=')[1]));
+  const late = await fetch(base + '/api/admin/inbox/count', { headers: { Cookie: tok } });
+  assert.equal(late.status, 401, 'passados 30 dias, pede o login');
+});

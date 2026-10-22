@@ -375,7 +375,7 @@
 
   // sem servidor ligado: as marcações online ficam fechadas e a cliente marca por mensagem ou telefone
   function offlineBooking(c) {
-    const wa = c.whatsapp ? S.waLink(c.whatsapp) + '?text=' + encodeURIComponent('Olá Adriana! Gostava de fazer uma marcação.') : '';
+    const wa = c.whatsapp ? S.waContact(c) : '';
     $('#stepper').innerHTML = ''; $('#summary').hidden = true;
     $('#step').innerHTML = `<div class="offline-box"><h2>Marcações online em breve</h2>
       <p>As marcações pelo site vão abrir dentro de pouco tempo. Até lá, marca comigo por WhatsApp ou por telefone — respondo o mais depressa possível.</p>

@@ -100,6 +100,8 @@
     return `<div class="notice" style="margin-top:14px"><strong>Encerramentos previstos</strong><ul style="margin:6px 0 0;padding-left:18px">${c.map(x =>
       `<li>${fmt.short(x.start_at)}${x.end_at - x.start_at > 86400000 ? ' a ' + fmt.short(x.end_at - 1) : ''}${x.public_note ? ' — ' + esc(x.public_note) : ''}</li>`).join('')}</ul></div>`;
   }
+  // link do WhatsApp com a mensagem de contacto já escrita (editável no painel)
+  const waContact = c => { const l = waLink(c && c.whatsapp); const t = c && String(c.wa_tpl_client_contact || '').trim(); return l && t ? l + '?text=' + encodeURIComponent(t) : l; };
   const waLink = n => { let d = String(n || '').replace(/\D/g, ''); if (!d) return ''; if (d.length === 9) d = '351' + d; return `https://wa.me/${d}`; };
   const telLink = n => /\d/.test(n) ? `tel:${String(n).replace(/[^\d+]/g, '')}` : '#';
 
@@ -127,7 +129,7 @@
       <div><h4>Contactos</h4><ul class="f-info">
         <li><span class="f-lab">Telefone:</span> <a href="${telLink(cfg.phone)}">${esc(cfg.phone)}</a></li>
         <li><span class="f-lab">Email:</span> <a href="mailto:${esc(cfg.email)}">${esc(cfg.email)}</a></li>
-        ${cfg.whatsapp ? `<li><a class="f-ig" href="${waLink(cfg.whatsapp)}" target="_blank" rel="noopener" aria-label="WhatsApp ${esc(cfg.whatsapp)}">${icon('phone')}<span>WhatsApp</span></a></li>` : ''}
+        ${cfg.whatsapp ? `<li><a class="f-ig" href="${waContact(cfg)}" target="_blank" rel="noopener" aria-label="WhatsApp ${esc(cfg.whatsapp)}">${icon('phone')}<span>WhatsApp</span></a></li>` : ''}
         ${cfg.instagram ? `<li><a class="f-ig" href="${esc(igUrl(cfg.instagram))}" target="_blank" rel="noopener" aria-label="Instagram ${esc(igHandle(cfg.instagram))}">${icon('instagram')}<span>Instagram</span></a></li>` : ''}
         ${cfg.facebook ? `<li><a class="f-ig" href="${esc(cfg.facebook)}" target="_blank" rel="noopener">${icon('globe')}<span>Facebook</span></a></li>` : ''}
         ${cfg.tiktok ? `<li><a class="f-ig" href="${esc(cfg.tiktok)}" target="_blank" rel="noopener">${icon('globe')}<span>TikTok</span></a></li>` : ''}
@@ -218,6 +220,6 @@
     const done = () => { const t = b.textContent; b.textContent = 'Copiado'; setTimeout(() => { b.textContent = t; }, 1600); };
     try { navigator.clipboard.writeText(b.dataset.copy).then(done, () => {}); } catch { /* sem área de transferência */ }
   });
-  window.Site = { me, igHandle, igUrl, api, config, icon, esc, $, $$, fmt, photo, stars, hoursTable, hoursSummary, closuresHtml, waLink, telLink, DAYS, reveal, TZ, isOffline, PAY_OPTS, payInfo, depositOf, eur };
+  window.Site = { me, igHandle, igUrl, api, config, icon, esc, $, $$, fmt, photo, stars, hoursTable, hoursSummary, closuresHtml, waLink, waContact, telLink, DAYS, reveal, TZ, isOffline, PAY_OPTS, payInfo, depositOf, eur };
   document.addEventListener('DOMContentLoaded', init);
 })();
